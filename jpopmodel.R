@@ -1,12 +1,16 @@
 
 
-# to run:
+# R script to implement a PVA model for Brazilian Jaguar... 
+# Author: Ascelin Gordon ascelin.gordon@rmit.edu.au
+# Commencement Date: 02 Feb 2016
+
+
+# To run:
 #   source( 'jpopmodel.R')
 
 rm(list=ls(all=TRUE))
 
 source('jpopmodel.functions.R')
-
 
 DEBUG <- FALSE
 
