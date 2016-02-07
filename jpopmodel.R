@@ -10,14 +10,17 @@
 
 rm(list=ls(all=TRUE))
 
+
 source('jpopmodel.functions.R')
+
+
 
 DEBUG <- FALSE
 
 # initialize variables
 num.time.steps <- 40
-num.reps <- 100
- 
+num.reps <- 5
+
 
         # ------------------------------------------------
         # These are to be automatically extracted by the R
@@ -59,6 +62,10 @@ if( dim(jcu.att)[1] != num.jcus ) stop( '\n\nERROR JCU attributes not conistent 
 # a data frame to store the full state of the system
 all.outputs <- data.frame ( "rep"=NA, "time"=NA, "jcu"=NA,
                            "stage1"=NA, "stage2"=NA, "stage3"=NA ) [numeric(0), ]
+
+# a datafram to just store the total population size to make a quick plot at the end
+total.pop <- matrix( ncol = num.time.steps, nrow = num.reps )
+
     
         # ------------------------------------------------
         # Do the model realizations 
@@ -107,6 +114,10 @@ for( rep in 1:num.reps) {
                 all.outputs <- rbind( all.outputs, current.info )
         }
 
+
+        total.pop[rep, time] <- sum(current.pop)
+
+        #browser()
         
         if(DEBUG){ cat( '\n Time step = ', time, '\n' ); show(current.pop) }
         
@@ -117,59 +128,11 @@ for( rep in 1:num.reps) {
   
 }
 
-
-        # ------------------------------------------------
-        # Analyse the resuls (this will be moved to an new script
-        # eventually)
-        # ------------------------------------------------
-
-
-# extract out and plot the total population change over time
-
-# make a matrix to hold the data
-pop.traj <- matrix(ncol=num.time.steps, nrow=num.reps) 
-pop.traj.jcu1 <- matrix(ncol=num.time.steps, nrow=num.reps) 
-pop.traj.jcu2 <- matrix(ncol=num.time.steps, nrow=num.reps) 
-pop.traj.jcu3 <- matrix(ncol=num.time.steps, nrow=num.reps) 
-
-for(i in 1:num.reps ) {
-    for( x in 1:num.time.steps ){
-        tmp <- subset( all.outputs, rep==i & time==x, select=stage1:stage3 )      
-        pop.traj[i, x ] <- sum(tmp)
-
-        tmp1 <- subset( all.outputs, rep==i & time==x & jcu==1, select=stage1:stage3 )      
-        pop.traj.jcu1[i, x ] <- sum(tmp1)
-        
-        tmp2 <- subset( all.outputs, rep==i & time==x & jcu==2, select=stage1:stage3 )      
-        pop.traj.jcu2[i, x ] <- sum(tmp2)
-        
-        tmp3 <- subset( all.outputs, rep==i & time==x & jcu==3, select=stage1:stage3 )      
-        pop.traj.jcu3[i, x ] <- sum(tmp3)
-        
-    }
-}
-
-par(mfrow=c(2,2))
-
-# plot all curves
-matplot(t(pop.traj), type="l")
-
-# plot the mean trajectory
-mean.traj <- apply(pop.traj,2,mean)
-lines(mean.traj, lwd=3)
+# plot the total pop trajectory of each realisationx and also the mean
+# trajectory
+matplot ( t(total.pop), type = 'l', main= 'Total population', ylab='pop size'  )
+mean.traj <- apply(total.pop,2,mean)
+lines(mean.traj, lwd=2)
 
 
-# plot jcu 1
-matplot(t(pop.traj.jcu1), type="l")
-mean.traj <- apply(pop.traj.jcu1,2,mean)
-lines(mean.traj, lwd=3)
-
-# plot jcu 2
-matplot(t(pop.traj.jcu2), type="l")
-mean.traj <- apply(pop.traj.jcu2,2,mean)
-lines(mean.traj, lwd=3)
-
-# plot jcu 3
-matplot(t(pop.traj.jcu3), type="l")
-mean.traj <- apply(pop.traj.jcu3,2,mean)
-lines(mean.traj, lwd=3)
+save(all.outputs, file='jpopmodel_data.Rdata')
