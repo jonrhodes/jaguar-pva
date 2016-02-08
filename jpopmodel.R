@@ -20,7 +20,7 @@ source('jpopmodel.functions.R')
 
 DEBUG <- FALSE
 num.time.steps <- 50
-num.reps <- 10
+num.reps <- 15
 
 
         # ------------------------------------------------
@@ -115,8 +115,6 @@ for( rep in 1:num.reps) {
         # Also save the total population size to make a quick plot 
         total.pop[rep, time] <- sum(current.pop)
 
-        #browser()
-        
         if(DEBUG){ cat( '\n Time step = ', time, '\n' ); show(current.pop) }
         
     }
@@ -133,12 +131,14 @@ for( rep in 1:num.reps) {
         # ------------------------------------------------
 
 
-# Plot the total pop trajectory of each realisationx and also the mean
-# trajectory
-matplot ( t(total.pop), type = 'l', main= 'Total population', ylab='pop size'  )
+# Plot the total pop trajectory of each realisation and also the mean
+# trajectory (using matplot() to automatically plot a curve for each
+# realization)
+matplot ( t(total.pop), type = 'l', main= 'Total population', xlab='time', ylab='pop size'  )
 mean.traj <- apply(total.pop,2,mean)
 lines(mean.traj, lwd=2)
 
-# save the outputs to file. Note this currently gets overwritten each time the script runs.
-
+# Save the outputs to file. This is used in the analyse.results.R
+# script. Note this currently gets overwritten each time the script
+# runs.
 save(all.outputs, file='jpopmodel_data.Rdata')
