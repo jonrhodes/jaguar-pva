@@ -6,33 +6,34 @@
 rm(list=ls(all=TRUE))
 
 
-# creates dataframe "all.outputs"
+# Creates dataframe "all.outputs"
 load ( 'jpopmodel_data.Rdata' )
 
 
-# get vales from the dataframe
+# Get vales from the dataframe
 num.reps <- max(all.outputs$rep)
 time.steps.vec <- unique(all.outputs$time)
 
 
-
         # ------------------------------------------------
         # Analyse the resuls
-        # 
         # ------------------------------------------------
 
 
-# extract out and plot the total population change over time
+# Extract out and plot the total population change over time
 
-# make a matrix to hold the data
+# Make a matrix to hold the data
 pop.traj <- matrix(ncol=length(time.steps.vec), nrow=num.reps)
 
-# made a matrix to hold the data for the first 3 JCUs
+# Made a matrix to hold the data for the first 3 JCUs
 pop.traj.jcu1 <- matrix(ncol=length(time.steps.vec), nrow=num.reps) 
 pop.traj.jcu2 <- matrix(ncol=length(time.steps.vec), nrow=num.reps) 
 pop.traj.jcu3 <- matrix(ncol=length(time.steps.vec), nrow=num.reps) 
 
-# extract out the 
+# Below is extracting the data for each JCU, could do the same for each
+# life stage also
+
+# Extract out the data to plot
 for(i in 1:num.reps ) {
     for( x in time.steps.vec ){
         tmp <- subset( all.outputs, rep==i & time==x, select=stage1:stage3 )      
@@ -52,8 +53,8 @@ for(i in 1:num.reps ) {
 
 par(mfrow=c(2,2))
 
-# plot all curves
-matplot(t(pop.traj), type="l")
+# Use matplot to plot a curve for each realization 
+matplot(t(pop.traj), type='l', main='Total population', xlab='time', ylab='pop size')
 
 # plot the mean trajectory
 mean.traj <- apply(pop.traj,2,mean)
@@ -61,16 +62,16 @@ lines(mean.traj, lwd=3)
 
 
 # plot jcu 1
-matplot(t(pop.traj.jcu1), type="l")
+matplot(t(pop.traj.jcu1), type='l', main='Pop of JCU1', xlab='time', ylab='pop size' )
 mean.traj <- apply(pop.traj.jcu1,2,mean)
 lines(mean.traj, lwd=3)
 
 # plot jcu 2
-matplot(t(pop.traj.jcu2), type="l")
+matplot(t(pop.traj.jcu2), type='l', main='Pop of JCU2', xlab='time', ylab='pop size')
 mean.traj <- apply(pop.traj.jcu2,2,mean)
 lines(mean.traj, lwd=3)
 
 # plot jcu 3
-matplot(t(pop.traj.jcu3), type="l")
+matplot(t(pop.traj.jcu3), type='l', main='Pop of JCU3', xlab='time', ylab='pop size')
 mean.traj <- apply(pop.traj.jcu3,2,mean)
 lines(mean.traj, lwd=3)
