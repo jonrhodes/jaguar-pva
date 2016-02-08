@@ -4,10 +4,10 @@ A PVA model for Barzillian Jagual in the Atlantic forest region.
 To run:
 
 1. Download the code from https://github.com/ascelin/jaguar-pva
-2. Start R and make the working directory, the directory that contains
-   the jaguar-pva code
-3. To run the mode execute  source( 'jpopmodel.R') in R
-4. To analyses the model, run results run source( 'analyse.results.R' ) in R
+2. Start R and make the R working directory the same directory that
+   contains the jaguar-pva code
+3. To run the mode execute "source( 'jpopmodel.R')" in R
+4. To analyses the outputs of the model just run, use "source( 'analyse.results.R' )" in R
 
 
 Current state of the code 
