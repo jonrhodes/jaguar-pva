@@ -47,31 +47,43 @@ for(i in 1:num.reps ) {
         
         tmp3 <- subset( all.outputs, rep==i & time==x & jcu==3, select=stage1:stage3 )      
         pop.traj.jcu3[i, x ] <- sum(tmp3)
-        
+
     }
 }
 
 par(mfrow=c(2,2))
 
+tot.cc <- sum(subset( all.outputs, rep==1 & time==1, select=cc ))
+
 # Use matplot to plot a curve for each realization 
-matplot(t(pop.traj), type='l', main='Total population', xlab='time', ylab='pop size')
+matplot(t(pop.traj), type='l', main='Total population', xlab='time', ylab='pop size',
+    ylim=c(0, max(tot.cc, pop.traj)) )
 
 # plot the mean trajectory
 mean.traj <- apply(pop.traj,2,mean)
 lines(mean.traj, lwd=3)
 
+# add a line for the total carrying capacity
+abline(h=tot.cc, col='grey')
+
+# The abline call justs plots the carrying capacity for the jcu (just the
+# initial value for now)
 
 # plot jcu 1
 matplot(t(pop.traj.jcu1), type='l', main='Pop of JCU1', xlab='time', ylab='pop size' )
 mean.traj <- apply(pop.traj.jcu1,2,mean)
 lines(mean.traj, lwd=3)
+abline( h=subset( all.outputs, jcu==1 & rep==1 & time==1, select=cc ), col='grey' )
 
 # plot jcu 2
 matplot(t(pop.traj.jcu2), type='l', main='Pop of JCU2', xlab='time', ylab='pop size')
 mean.traj <- apply(pop.traj.jcu2,2,mean)
 lines(mean.traj, lwd=3)
+abline( h=subset( all.outputs, jcu==2 & rep==1 & time==1, select=cc ), col='grey' )
 
 # plot jcu 3
 matplot(t(pop.traj.jcu3), type='l', main='Pop of JCU3', xlab='time', ylab='pop size')
 mean.traj <- apply(pop.traj.jcu3,2,mean)
 lines(mean.traj, lwd=3)
+abline( h=subset( all.outputs, jcu==3 & rep==1 & time==1, select=cc ), col='grey' )
+

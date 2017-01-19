@@ -4,6 +4,9 @@
 age.population <- function( cur.pop, num.stages) {
 
     # Move the population through the age stages
+
+    # Note: curr.pop is matrix of life stages (rows) by JCUs (columns), showing
+    # the number of individuals in each life stage in each JCU.
     
     age = function(x) {
         tmp <- x
@@ -43,6 +46,7 @@ reproduce <- function( cur.pop, stages, birth.rate ) {
 apply.mortality <- function(pop, mortality ){
 
     # flipt a wighted coin to decide how many die
+    # note: currently assumes all stages have the same mortality
     mortality.function = function(x) rbinom(n=1, size=x, prob=(1-mortality))
     
     return( sapply( pop, mortality.function) )

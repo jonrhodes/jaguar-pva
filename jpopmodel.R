@@ -33,13 +33,13 @@ num.reps <- 15
 num.jcus <- 4
 num.life.stages <- 3
 
-jcu.att <- data.frame( cc=c(10,20,7,50),
-                      #mortality=c(0.5,0.1,0.2,0.4), #assuming same for each stage for now so one no per JCU
-                      mortality=rep(0.2,num.jcus),
+jcu.att <- data.frame( cc=c(10,20,7,15),
+                      mortality=c(0.5,0.15,0.2,0.4), #assuming same for each stage for now so one no per JCU
+                      #mortality=rep(0.2,num.jcus),
                       
                       # Assuming only last stage gives birth, this is the prob of giving birth to 1 offspring
                       birth.rate=rep(0.2, num.jcus)
-                      
+                      #birth.rate=c(0.1, 0.2, 0.25, 0.28)
                       )
 
 # Make an initial population (random from now) 
@@ -60,7 +60,7 @@ if( dim(jcu.att)[1] != num.jcus ) stop( '\n\nERROR JCU attributes not conistent 
         # ------------------------------------------------
 
 # A data.frame to store the full state of the system
-all.outputs <- data.frame ( "rep"=NA, "time"=NA, "jcu"=NA,
+all.outputs <- data.frame ( "rep"=NA, "time"=NA, "jcu"=NA, "cc"=NA, "mortality"=NA, "birth.rate"=NA,
                            "stage1"=NA, "stage2"=NA, "stage3"=NA ) [numeric(0), ]
 
 # A datafram to just store the total population size to make a quick plot at the end
@@ -92,6 +92,7 @@ for( rep in 1:num.reps) {
         for( jcu in 1:num.jcus){
             
             if( time > 1 ) { # don't apply mortality in the first time step
+
                 # Apply mortality to the populations in each JCU
                 current.pop[,jcu] <- apply.mortality(current.pop[,jcu], jcu.att$mortality[jcu])                
             }
@@ -102,8 +103,9 @@ for( rep in 1:num.reps) {
             # ------------------------------------------------
                 
             # Build a vector for the current info of the system
-            current.info <- c(rep, time, jcu, current.pop[,jcu] )
-                
+            current.info <- c(rep, time, jcu, jcu.att[jcu,"cc"], jcu.att[jcu,"mortality"], 
+            	jcu.att[jcu,"birth.rate"], current.pop[,jcu] )
+           	
             if( dim(all.outputs)[1] == 0 )
                 # if first data entry, replace the first line
                 all.outputs[1,] <- current.info
