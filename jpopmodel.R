@@ -47,6 +47,13 @@ initial.pop <- matrix( ncol=num.jcus, nrow=num.life.stages, sample(1:10, size=nu
 colnames(initial.pop) <- paste( 'jcu', 1:num.jcus, sep='') # set column names
 rownames(initial.pop) <- paste( 'stage', 1:num.life.stages, sep='') # set the row names
 
+# Make a dispersal matrxi between each of the JCUs
+disp.mat <- matrix(ncol=num.jcus, nrow=num.jcus)
+disp.mat[] <- 0.2  # set all values to be the same for now
+diag(x) <- 0  # set the diagonal values to zero.
+
+
+
 
         # ------------------------------------------------
         # Validity checks
@@ -88,14 +95,28 @@ for( rep in 1:num.reps) {
 
         }
         
+
+
         # loop through each JCU and apply the JCU specific mortality to each life stage
         for( jcu in 1:num.jcus){
             
             if( time > 1 ) { # don't apply mortality in the first time step
 
                 # Apply mortality to the populations in each JCU
-                current.pop[,jcu] <- apply.mortality(current.pop[,jcu], jcu.att$mortality[jcu])                
+                current.pop[,jcu] <- apply.mortality(current.pop[,jcu], jcu.att$mortality[jcu])
+
+
             }
+
+
+            # apply dispersal
+            # NOTE change so finish mortality loop and the implement dispersal.
+            # so will need to finish the for loop here and the then start another to dispearse 
+            # and another to save the output?? 
+            # first get it working with the mortality loop and the loop to save the results in 
+            # to separate loops.
+            x <- apply.dispersal(disp.mat)
+
 
             
             # ------------------------------------------------
