@@ -6,7 +6,7 @@
 
 
 # To run:
-#   source( 'jpopmodel.R')
+#   source( 'jpopmodel_tmp.R')
 
 rm(list=ls(all=TRUE))
 
@@ -50,9 +50,7 @@ rownames(initial.pop) <- paste( 'stage', 1:num.life.stages, sep='') # set the ro
 # Make a dispersal matrxi between each of the JCUs
 disp.mat <- matrix(ncol=num.jcus, nrow=num.jcus)
 disp.mat[] <- 0.2  # set all values to be the same for now
-diag(x) <- 0  # set the diagonal values to zero.
-
-
+diag(disp.mat) <- 0  # set the diagonal values to zero.
 
 
         # ------------------------------------------------
