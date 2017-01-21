@@ -21,7 +21,7 @@ source('jpopmodel.functions.R')
 
 DEBUG <- FALSE
 num.time.steps <- 50
-num.reps <- 10
+num.reps <- 15
 
 
         # ------------------------------------------------
@@ -114,33 +114,27 @@ for( rep in 1:num.reps) {
 
             # Apply mortality to the populations in each JCU
             current.pop[,jcu] <- apply.mortality(current.pop[,jcu], jcu.att$mortality[jcu])
+        }    
 
+        # apply dispersal
+        temp.var <- apply.dispersal(disp.mat)
+        
+        # ------------------------------------------------
+        # Save the current info 
+        # ------------------------------------------------
 
-            # apply dispersal
-            # NOTE change so finish mortality loop and the implement dispersal.
-            # so will need to finish the for loop here and the then start another to dispearse 
-            # and another to save the output?? 
-            # first get it working with the mortality loop and the loop to save the results in 
-            # to separate loops.
-            x <- apply.dispersal(disp.mat)
+        # Save the total population size to make a quick plot at the end
+        total.pop[rep, time] <- sum(current.pop)
 
-            
-            # ------------------------------------------------
-            # Save the current info 
-            # ------------------------------------------------
-                
+        for( jcu in 1:num.jcus){        
             # Build a vector for the current info of the system
             current.info <- c(rep, time, jcu, jcu.att[jcu,"cc"], jcu.att[jcu,"mortality"], 
                 	           jcu.att[jcu,"birth.rate"], current.pop[,jcu] )
-
                	
             # Add the the all outouts dataframe
             all.outputs <- rbind( all.outputs, current.info )
-        }   
+        }
         
-        # Also save the total population size to make a quick plot 
-        total.pop[rep, time] <- sum(current.pop)
-
         if(DEBUG){ cat( '\n Time step = ', time, '\n' ); show(current.pop) }
         
     }
