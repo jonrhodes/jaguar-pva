@@ -10,6 +10,7 @@
 
 rm(list=ls(all=TRUE))
 
+set.seed(1)
 
 source('jpopmodel.functions.R')
 
@@ -20,7 +21,7 @@ source('jpopmodel.functions.R')
 
 DEBUG <- FALSE
 num.time.steps <- 50
-num.reps <- 15
+num.reps <- 10
 
 
         # ------------------------------------------------
@@ -72,39 +73,47 @@ all.outputs <- data.frame ( "rep"=NA, "time"=NA, "jcu"=NA, "cc"=NA, "mortality"=
 total.pop <- matrix( ncol = num.time.steps, nrow = num.reps )
 
     
+    
         # ------------------------------------------------
         # Run the model
         # ------------------------------------------------
 
+
 for( rep in 1:num.reps) {
     
     if(DEBUG){cat( "\n\n--------------------------------"); cat( '\n Rep = ', rep, '\n' )}
-
-    current.pop <- initial.pop    
     
-    for( time in 1:num.time.steps) {
+    # First save the initial values for timestep 1 for all jcus
+    time<-1
+    for( jcu in 1:num.jcus){
+        init.info <- c(rep, time, jcu, jcu.att[jcu,"cc"], jcu.att[jcu,"mortality"], 
+                  jcu.att[jcu,"birth.rate"], initial.pop[,jcu] )
+
+        # If first data entry, replace the first line
+        if( dim(all.outputs)[1] == 0 ) all.outputs[1,] <- init.info
+        else  all.outputs <- rbind( all.outputs, init.info ) # otherwise append it           
+    }
+
+    # Save the total population size to make a quick plot at the end 
+    total.pop[rep, time] <- sum(initial.pop)
+    if(DEBUG){ cat( '\n Time step = ', time, '\n' ); show(initial.pop) }
+   
+
+    # Now loop over time steps from 2 onwards
+    current.pop <- initial.pop
+    for( time in 2:num.time.steps) {
         
-        if( time > 1 ) {            
-            # age the population
-            current.pop <- age.population(current.pop, num.life.stages)
+        # age the population
+        current.pop <- age.population(current.pop, num.life.stages)
             
-            # do reproduction (assumes for now only last stage reporduces)
-            current.pop <- reproduce(current.pop, num.life.stages, jcu.att$birth.rate)
-
-        }
-        
-
+        # do reproduction (assumes for now only last stage reporduces)
+        current.pop <- reproduce(current.pop, num.life.stages, jcu.att$birth.rate)
 
         # loop through each JCU and apply the JCU specific mortality to each life stage
         for( jcu in 1:num.jcus){
-            
-            if( time > 1 ) { # don't apply mortality in the first time step
 
-                # Apply mortality to the populations in each JCU
-                current.pop[,jcu] <- apply.mortality(current.pop[,jcu], jcu.att$mortality[jcu])
-
-
-            }
+            # Apply mortality to the populations in each JCU
+            current.pop[,jcu] <- apply.mortality(current.pop[,jcu], jcu.att$mortality[jcu])
 
 
             # apply dispersal
@@ -115,7 +124,6 @@ for( rep in 1:num.reps) {
             # to separate loops.
             x <- apply.dispersal(disp.mat)
 
-
             
             # ------------------------------------------------
             # Save the current info 
@@ -123,15 +131,12 @@ for( rep in 1:num.reps) {
                 
             # Build a vector for the current info of the system
             current.info <- c(rep, time, jcu, jcu.att[jcu,"cc"], jcu.att[jcu,"mortality"], 
-            	jcu.att[jcu,"birth.rate"], current.pop[,jcu] )
-           	
-            if( dim(all.outputs)[1] == 0 )
-                # if first data entry, replace the first line
-                all.outputs[1,] <- current.info
-            else
-                # otherwise append it
-                all.outputs <- rbind( all.outputs, current.info )
-        }
+                	           jcu.att[jcu,"birth.rate"], current.pop[,jcu] )
+
+               	
+            # Add the the all outouts dataframe
+            all.outputs <- rbind( all.outputs, current.info )
+        }   
         
         # Also save the total population size to make a quick plot 
         total.pop[rep, time] <- sum(current.pop)
@@ -141,7 +146,6 @@ for( rep in 1:num.reps) {
     }
     
     if(DEBUG) cat("\n")
-
   
 }
 
