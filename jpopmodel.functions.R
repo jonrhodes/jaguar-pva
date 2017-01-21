@@ -37,7 +37,6 @@ reproduce <- function( cur.pop, stages, birth.rate ) {
     }
     
     cur.pop[1,] <- pop
-    
 
     return ( cur.pop  )
 }
@@ -51,6 +50,14 @@ apply.mortality <- function(pop, mortality ){
     
     return( sapply( pop, mortality.function) )
     
+}
+
+#---------------------------------------------------------------
+
+apply.dispersal <- function( disp.mat ) {
+
+
+return (0)
 }
 
 #---------------------------------------------------------------
