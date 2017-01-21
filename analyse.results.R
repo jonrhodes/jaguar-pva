@@ -87,3 +87,6 @@ mean.traj <- apply(pop.traj.jcu3,2,mean)
 lines(mean.traj, lwd=3)
 abline( h=subset( all.outputs, jcu==3 & rep==1 & time==1, select=cc ), col='grey' )
 
+
+par(mfrow=c(1,1))
+
