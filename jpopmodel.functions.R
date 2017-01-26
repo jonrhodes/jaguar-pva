@@ -44,7 +44,7 @@ reproduce <- function( cur.pop, stages, birth.rate ) {
 #---------------------------------------------------------------
 apply.mortality <- function(pop, mortality ){
 
-    # flipt a wighted coin to decide how many die
+    # flip a weighted coin to decide how many die
     # note: currently assumes all stages have the same mortality
     mortality.function = function(x) rbinom(n=1, size=x, prob=(1-mortality))
     
@@ -54,10 +54,72 @@ apply.mortality <- function(pop, mortality ){
 
 #---------------------------------------------------------------
 
-apply.dispersal <- function( disp.mat ) {
+disperse.stage <- function() {
 
 
-return (0)
+}
+
+#---------------------------------------------------------------
+
+apply.dispersal <- function( current.pop, jcu.cc, disp.mort.mat ) {
+
+	# For now, all jaguars over cc try and disperse
+
+	if(DEBUG.LEVEL > 1) {cat( '\n  In dispersal function\n'); show(current.pop) }
+
+	jcu.vec <- 1:length(jcu.cc)
+	dispersal.ctr <- 0
+	dispersal.mort.ctr <- 0
+
+	for( i in jcu.vec ){
+
+		if(DEBUG.LEVEL > 1) cat('\njcu=', i, 'cc=', jcu.cc[i], 'stage3.pop=',current.pop[3,i], 
+		 	'no over cc=', max(current.pop[3,i] - jcu.cc[i],0) , '\n')
+
+		source.jcu <- i
+		num.to.disperse <- current.pop[3,i] - jcu.cc[i]
+
+		
+		# If there are more stage 3 adults than the cc disperse them
+		if( num.to.disperse > 0) {
+
+
+			# choose the jcus that each jaguar try and disperse to 
+			# select each one randomly for now
+			dest.jcus <- sample(jcu.vec[-i], num.to.disperse, replace=TRUE )
+
+			# reduce the pop of the source jcu by the number that disperse
+			current.pop[3,i] <- current.pop[3,i] - num.to.disperse
+
+			# determine which ones survive the dispersal
+			survival.vec <- rbinom(n=num.to.disperse, size=1, prob=(1-disp.mort.mat[source.jcu, dest.jcus]) )
+			dest.jcus.surviving <- dest.jcus[which(survival.vec==1)]
+			no.die.dispersing <- length(which(survival.vec==0))
+
+			# determine the total number going to each jcu
+			# Note: rle: Run Length Encoding to compute the lengths and values of runs of equal values 
+			#            in a vector
+			rle.cts <- rle(sort(dest.jcus.surviving))
+			receive.cts <- rep(0, length(jcu.vec))
+			receive.cts[rle.cts$values] <-  rle.cts$lengths
+
+			# Update the population
+			current.pop[3,] <- current.pop[3,] + receive.cts
+
+			# track some dispersal stats
+			dispersal.ctr <- dispersal.ctr + num.to.disperse
+			dispersal.mort.ctr <- dispersal.mort.ctr + no.die.dispersing
+
+			
+		}
+
+
+	}
+	#browser()
+	
+	if(DEBUG.LEVEL>0) cat(' (No disp:', dispersal.ctr, 'mort in disp:', dispersal.mort.ctr, ')')
+	
+	return (current.pop)
 }
 
 #---------------------------------------------------------------
