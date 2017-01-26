@@ -7,12 +7,14 @@ rm(list=ls(all=TRUE))
 
 
 # Creates dataframe "all.outputs"
-load ( 'jpopmodel_data.Rdata' )
+results.file <- 'jpopmodel_data_disp.Rdata'
+load ( results.file )
 
 
 # Get vales from the dataframe
 num.reps <- max(all.outputs$rep)
 time.steps.vec <- unique(all.outputs$time)
+max.time <- max(time.steps.vec)
 
 
         # ------------------------------------------------
@@ -56,11 +58,13 @@ par(mfrow=c(2,2))
 tot.cc <- sum(subset( all.outputs, rep==1 & time==1, select=cc ))
 
 # Use matplot to plot a curve for each realization 
-matplot(t(pop.traj), type='l', main='Total population', xlab='time', ylab='pop size',
+mean.traj <- apply(pop.traj,2,mean)
+main.txt <- paste('Tot pop (MEP=', mean.traj[max.time],')', sep='')
+matplot(t(pop.traj), type='l', main=main.txt, xlab='time', ylab='pop size',
     ylim=c(0, max(tot.cc, pop.traj)) )
+mtext(results.file, outer=TRUE, line=-1.5)
 
 # plot the mean trajectory
-mean.traj <- apply(pop.traj,2,mean)
 lines(mean.traj, lwd=3)
 
 # add a line for the total carrying capacity
@@ -70,20 +74,23 @@ abline(h=tot.cc, col='grey')
 # initial value for now)
 
 # plot jcu 1
-matplot(t(pop.traj.jcu1), type='l', main='Pop of JCU1', xlab='time', ylab='pop size' )
 mean.traj <- apply(pop.traj.jcu1,2,mean)
+main.txt <- paste('JCU1 (MEP=', mean.traj[max.time],')', sep='')
+matplot(t(pop.traj.jcu1), type='l', main=main.txt, xlab='time', ylab='pop size' )
 lines(mean.traj, lwd=3)
 abline( h=subset( all.outputs, jcu==1 & rep==1 & time==1, select=cc ), col='grey' )
 
 # plot jcu 2
-matplot(t(pop.traj.jcu2), type='l', main='Pop of JCU2', xlab='time', ylab='pop size')
 mean.traj <- apply(pop.traj.jcu2,2,mean)
+main.txt <- paste('JCU2 (MEP=', mean.traj[max.time],')', sep='')
+matplot(t(pop.traj.jcu2), type='l', main=main.txt, xlab='time', ylab='pop size')
 lines(mean.traj, lwd=3)
 abline( h=subset( all.outputs, jcu==2 & rep==1 & time==1, select=cc ), col='grey' )
 
 # plot jcu 3
-matplot(t(pop.traj.jcu3), type='l', main='Pop of JCU3', xlab='time', ylab='pop size')
 mean.traj <- apply(pop.traj.jcu3,2,mean)
+main.txt <- paste('JCU3 (MEP=', mean.traj[max.time],')', sep='')
+matplot(t(pop.traj.jcu3), type='l', main=main.txt, xlab='time', ylab='pop size')
 lines(mean.traj, lwd=3)
 abline( h=subset( all.outputs, jcu==3 & rep==1 & time==1, select=cc ), col='grey' )
 
