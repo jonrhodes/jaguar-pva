@@ -13,6 +13,7 @@ set.seed(1)
 source('jpopmodel.functions.R')
 
 
+
         # ------------------------------------------------
         # Define the name parameters of the model
         # ------------------------------------------------
@@ -34,14 +35,19 @@ output.filename <- 'jpopmodel_data_nodisp.Rdata'
 num.jcus <- 4
 num.life.stages <- 3
 
+
 jcu.att <- data.frame( cc=c(5,10,7,15),
                        #cc=c(5,45,45,40),
-                      #mortality=c(0.5,0.15,0.2,0.4), #assuming same for each stage for now so one no per JCU
-                      mortality=rep(0.2,num.jcus),
+                      #mortality.stage3=c(0.5,0.15,0.2,0.4), #assuming same for each stage for now so one no per JCU
+                      mortality.stage1=rep(0.38,num.jcus),
+                      mortality.stage2=rep(0.26,num.jcus),
+                      mortality.stage3=rep(0.14,num.jcus),
                       
                       # Assuming only last stage gives birth, this is the prob of giving birth to 1 offspring
-                      birth.rate=rep(0.2, num.jcus)
-                      #birth.rate=c(0.1, 0.2, 0.25, 0.28)
+                      birth.rate.mean=rep(0.45, num.jcus), 
+                      birth.rate.upper.bound=rep(0.3, num.jcus), # not currently used
+                      birth.rate.lower.bound=rep(0.6, num.jcus)  # not currently used
+                      
                       )
 
 # Make an initial population (random from now) 
@@ -68,7 +74,7 @@ if( dim(jcu.att)[1] != num.jcus ) stop( '\n\nERROR JCU attributes not conistent 
         # ------------------------------------------------
 
 # A data.frame to store the full state of the system
-all.outputs <- data.frame ( "rep"=NA, "time"=NA, "jcu"=NA, "cc"=NA, "mortality"=NA, "birth.rate"=NA,
+all.outputs <- data.frame ( "rep"=NA, "time"=NA, "jcu"=NA, "cc"=NA, "mortality.stage3"=NA, "birth.rate.mean"=NA,
                            "stage1"=NA, "stage2"=NA, "stage3"=NA ) [numeric(0), ]
 
 # A datafram to just store the total population size to make a quick plot at the end
@@ -89,8 +95,8 @@ for( rep in 1:num.reps) {
     # First save the initial values for timestep 1 for all jcus
     time<-1
     for( jcu in 1:num.jcus){
-        init.info <- c(rep, time, jcu, jcu.att[jcu,"cc"], jcu.att[jcu,"mortality"], 
-                  jcu.att[jcu,"birth.rate"], initial.pop[,jcu] )
+        init.info <- c(rep, time, jcu, jcu.att[jcu,"cc"], jcu.att[jcu,"mortality.stage3"], 
+                  jcu.att[jcu,"birth.rate.mean"], initial.pop[,jcu] )
 
         # If first data entry, replace the first line
         if( dim(all.outputs)[1] == 0 ) all.outputs[1,] <- init.info
@@ -113,13 +119,14 @@ for( rep in 1:num.reps) {
         current.pop <- age.population(current.pop, num.life.stages)
             
         # do reproduction (assumes for now only last stage reproduces)
-        current.pop <- reproduce(current.pop, num.life.stages, jcu.att$birth.rate)
+        current.pop <- reproduce(current.pop, num.life.stages, jcu.att$birth.rate.mean)
         
         # loop through each JCU and apply the JCU specific mortality to each life stage
         for( jcu in 1:num.jcus){
 
             # Apply mortality to the populations in each JCU
-            current.pop[,jcu] <- apply.mortality(current.pop[,jcu], jcu.att$mortality[jcu])
+            current.pop[,jcu] <- apply.mortality(current.pop[,jcu], jcu.att$mortality.stage1[jcu],
+                                                jcu.att$mortality.stage2[jcu], jcu.att$mortality.stage3[jcu])
         }
 
         # apply dispersal
@@ -135,8 +142,8 @@ for( rep in 1:num.reps) {
 
         for( jcu in 1:num.jcus){        
             # Build a vector for the current info of the system
-            current.info <- c(rep, time, jcu, jcu.att[jcu,"cc"], jcu.att[jcu,"mortality"], 
-                	           jcu.att[jcu,"birth.rate"], current.pop[,jcu] )
+            current.info <- c(rep, time, jcu, jcu.att[jcu,"cc"], jcu.att[jcu,"mortality.stage3"], 
+                	           jcu.att[jcu,"birth.rate.mean"], current.pop[,jcu] )
                	
             # Add the the all outouts dataframe
             all.outputs <- rbind( all.outputs, current.info )

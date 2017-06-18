@@ -42,13 +42,18 @@ reproduce <- function( cur.pop, stages, birth.rate ) {
 }
 
 #---------------------------------------------------------------
-apply.mortality <- function(pop, mortality ){
+apply.mortality <- function(pop, mortality.s1, mortality.s2, mortality.s3 ){
 
     # flip a weighted coin to decide how many die
     # note: currently assumes all stages have the same mortality
-    mortality.function = function(x) rbinom(n=1, size=x, prob=(1-mortality))
-    
-    return( sapply( pop, mortality.function) )
+    # mortality.function = function(x) rbinom(n=1, size=x, prob=(1-mortality))
+    # return( sapply( pop, mortality.function) )
+
+    pop['stage1'] <- rbinom(n=1, size=pop['stage1'], prob=(1-mortality.s1))
+    pop['stage2'] <- rbinom(n=1, size=pop['stage2'], prob=(1-mortality.s2))    
+    pop['stage3'] <- rbinom(n=1, size=pop['stage3'], prob=(1-mortality.s3))
+
+    return(pop)
     
 }
 
