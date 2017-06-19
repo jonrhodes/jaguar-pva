@@ -1,5 +1,5 @@
 # jaguar-pva
-A PVA model for Barzillian Jagual in the Atlantic forest region.
+A PVA model for Barzillian Jaguar in the Atlantic forest region.
 
 To run:
 
