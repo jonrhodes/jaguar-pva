@@ -12,16 +12,12 @@ To run:
 
 Current state of the code 
 
-* Currently has no dispersal (this will be the next thing to be added)
+* Currently set up with a small number of JCUs for testing and development 
 
-* There are 3 life stages and only the 3rd stage can reproduce
+* There are 3 life stages and only the 3rd stage can reproduce or dispersal
 
-* Assuming a single mortality facor for each JCU applies to each life
-  stage
+* There is no density dependence incoporated into the model yet. 
 
-* For now reproduction is simply modelled follows: each individual in
-  stage 3 has a predefined propability of having 1 offspring. This is
-  all contained in the "reproduce" function.
   
 Assumptions of the model
 
