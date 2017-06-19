@@ -7,7 +7,7 @@ rm(list=ls(all=TRUE))
 
 
 # Creates dataframe "all.outputs"
-results.file <- 'jpopmodel_data_disp.Rdata'
+results.file <- 'jpopmodel_data_nodisp.Rdata'
 load ( results.file )
 
 
@@ -68,31 +68,34 @@ mtext(results.file, outer=TRUE, line=-1.5)
 lines(mean.traj, lwd=3)
 
 # add a line for the total carrying capacity
-abline(h=tot.cc, col='grey')
+#abline(h=tot.cc, col='grey')
 
 # The abline call justs plots the carrying capacity for the jcu (just the
 # initial value for now)
 
 # plot jcu 1
 mean.traj <- apply(pop.traj.jcu1,2,mean)
-main.txt <- paste('JCU1 (MEP=', mean.traj[max.time],')', sep='')
+#main.txt <- paste('JCU1 (MEP=', mean.traj[max.time],')', sep='')
+main.txt <- paste('JCU1 Low hunting pressure') 
 matplot(t(pop.traj.jcu1), type='l', main=main.txt, xlab='time', ylab='pop size' )
 lines(mean.traj, lwd=3)
-abline( h=subset( all.outputs, jcu==1 & rep==1 & time==1, select=cc ), col='grey' )
+#abline( h=subset( all.outputs, jcu==1 & rep==1 & time==1, select=cc ), col='grey' )
 
 # plot jcu 2
 mean.traj <- apply(pop.traj.jcu2,2,mean)
-main.txt <- paste('JCU2 (MEP=', mean.traj[max.time],')', sep='')
+#main.txt <- paste('JCU2 (MEP=', mean.traj[max.time],')', sep='')
+main.txt <- paste('JCU2 Medium hunting pressure')
 matplot(t(pop.traj.jcu2), type='l', main=main.txt, xlab='time', ylab='pop size')
 lines(mean.traj, lwd=3)
-abline( h=subset( all.outputs, jcu==2 & rep==1 & time==1, select=cc ), col='grey' )
+#abline( h=subset( all.outputs, jcu==2 & rep==1 & time==1, select=cc ), col='grey' )
 
 # plot jcu 3
 mean.traj <- apply(pop.traj.jcu3,2,mean)
-main.txt <- paste('JCU3 (MEP=', mean.traj[max.time],')', sep='')
+#main.txt <- paste('JCU3 (MEP=', mean.traj[max.time],')', sep='')
+main.txt <- paste('JCU3 High hunting pressure')
 matplot(t(pop.traj.jcu3), type='l', main=main.txt, xlab='time', ylab='pop size')
 lines(mean.traj, lwd=3)
-abline( h=subset( all.outputs, jcu==3 & rep==1 & time==1, select=cc ), col='grey' )
+#abline( h=subset( all.outputs, jcu==3 & rep==1 & time==1, select=cc ), col='grey' )
 
 
 par(mfrow=c(1,1))

@@ -8,7 +8,7 @@
 
 rm(list=ls(all=TRUE))
 
-set.seed(1)
+set.seed(2)
 
 source('jpopmodel.functions.R')
 
@@ -18,11 +18,17 @@ source('jpopmodel.functions.R')
         # Define the name parameters of the model
         # ------------------------------------------------
 
-DEBUG.LEVEL <- 1  # 0-none; 1-terse, 2-verbose
-num.time.steps <- 10
-num.reps <- 50
-include.dispersal <- FALSE
+DEBUG.LEVEL <- 0  # 0-none; 1-terse, 2-verbose
+num.time.steps <- 30
+num.reps <- 100
+OPT.INCLUDE.DISPERSAL <- FALSE
 output.filename <- 'jpopmodel_data_nodisp.Rdata'
+
+# Option of whether to use a truncated Poisson distribution for determing the
+# number offspring (TRUE) or whether to assume there are only 1 or 2 offspring
+# (FALSE). The truncated Poisson means that occasionally there may be 5 or 6
+# offspring.
+OPT.USE.TRUNCATED.POISSON.FOR.REPRODUCTION <- TRUE 
 
 
         # ------------------------------------------------
@@ -32,18 +38,21 @@ output.filename <- 'jpopmodel_data_nodisp.Rdata'
         # ------------------------------------------------
 
 
-num.jcus <- 4
+num.jcus <- 3
 num.life.stages <- 3
 
 
-jcu.att <- data.frame( cc=c(5,10,7,15),
+jcu.att <- data.frame( cc=c(20,20,20), #15),
                        #cc=c(5,45,45,40),
                       #mortality.stage3=c(0.5,0.15,0.2,0.4), #assuming same for each stage for now so one no per JCU
-                      mortality.stage1=rep(0.38,num.jcus),
-                      mortality.stage2=rep(0.26,num.jcus),
-                      mortality.stage3=rep(0.14,num.jcus),
+                      # mortality.stage1=rep(0.38,num.jcus),
+                      # mortality.stage2=rep(0.26,num.jcus),
+                      # mortality.stage3=rep(0.14,num.jcus),
+                      mortality.stage1=c(0.38, 0.44, 0.58),
+                      mortality.stage2=c(0.26, 0.33, 0.55),
+                      mortality.stage3=c(0.14, 0.27, 0.51),
                       
-                      # Assuming only last stage gives birth, this is the prob of giving birth to 1 offspring
+                      # Assuming only last stage gives birth, this is the prob of giving birth to 1 or more offspring
                       birth.rate.mean=rep(0.45, num.jcus), 
                       birth.rate.upper.bound=rep(0.3, num.jcus), # not currently used
                       birth.rate.lower.bound=rep(0.6, num.jcus)  # not currently used
@@ -51,7 +60,9 @@ jcu.att <- data.frame( cc=c(5,10,7,15),
                       )
 
 # Make an initial population (random from now) 
-initial.pop <- matrix( ncol=num.jcus, nrow=num.life.stages, sample(1:10, size=num.jcus*3, replace=TRUE ) )
+#initial.pop <- matrix( ncol=num.jcus, nrow=num.life.stages, sample(1:10, size=num.jcus*3, replace=TRUE ) )
+initial.pop <- matrix( ncol=num.jcus, nrow=num.life.stages, rep(5, num.jcus*3) ) # in in each stage
+
 #initial.pop <- matrix( ncol=num.jcus, nrow=num.life.stages, c(10,7,10,12),byrow=TRUE )
 colnames(initial.pop) <- paste( 'jcu', 1:num.jcus, sep='') # set column names
 rownames(initial.pop) <- paste( 'stage', 1:num.life.stages, sep='') # set the row names
@@ -90,7 +101,7 @@ total.pop <- matrix( ncol = num.time.steps, nrow = num.reps )
 for( rep in 1:num.reps) {
     
     if(DEBUG.LEVEL>0){cat( "\n\n--------------------------------")}
-    cat( '\n Rep = ', rep )
+    if(rep%%10==0) cat( '\n Rep = ', rep ) # print every 10th rep 
     
     # First save the initial values for timestep 1 for all jcus
     time<-1
@@ -119,7 +130,7 @@ for( rep in 1:num.reps) {
         current.pop <- age.population(current.pop, num.life.stages)
             
         # do reproduction (assumes for now only last stage reproduces)
-        current.pop <- reproduce(current.pop, num.life.stages, jcu.att$birth.rate.mean)
+        current.pop <- reproduce(current.pop, jcu.att$birth.rate.mean, litter.size.dist)
         
         # loop through each JCU and apply the JCU specific mortality to each life stage
         for( jcu in 1:num.jcus){
@@ -130,7 +141,7 @@ for( rep in 1:num.reps) {
         }
 
         # apply dispersal
-        if( include.dispersal ) 
+        if( OPT.INCLUDE.DISPERSAL ) 
             current.pop <- apply.dispersal(current.pop, jcu.att$cc, disp.mort.mat)
         
         # ------------------------------------------------
@@ -159,6 +170,8 @@ for( rep in 1:num.reps) {
   
 }
 
+cat('\n')
+
 
         # ------------------------------------------------
         # Make some simple plots. For more detailed analysis run the
@@ -170,7 +183,9 @@ for( rep in 1:num.reps) {
 # trajectory (using matplot() to automatically plot a curve for each
 # realization)
 matplot ( t(total.pop), type = 'l', main= 'Total population', xlab='time', ylab='pop size',
-         ylim=c(0, max(total.pop)) )
+         #ylim=c(0, 120)
+         ylim=c(0, max(total.pop))
+        )
 mean.traj <- apply(total.pop,2,mean)
 lines(mean.traj, lwd=2)
 
