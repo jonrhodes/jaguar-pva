@@ -10,6 +10,7 @@ rm(list=ls(all=TRUE))
 
 set.seed(2)
 
+
 source('jpopmodel.functions.R')
 
 
@@ -19,10 +20,10 @@ source('jpopmodel.functions.R')
         # ------------------------------------------------
 
 DEBUG.LEVEL <- 0  # 0-none; 1-terse, 2-verbose
-num.time.steps <- 30
+num.time.steps <- 80
 num.reps <- 100
-OPT.INCLUDE.DISPERSAL <- FALSE
-output.filename <- 'jpopmodel_data_nodisp.Rdata'
+OPT.INCLUDE.DISPERSAL <- TRUE
+output.filename <- 'jpopmodel_data_disp.Rdata'
 
 # Option of whether to use a truncated Poisson distribution for determing the
 # number offspring (TRUE) or whether to assume there are only 1 or 2 offspring
@@ -88,7 +89,7 @@ if( dim(jcu.att)[1] != num.jcus ) stop( '\n\nERROR JCU attributes not conistent 
 all.outputs <- data.frame ( "rep"=NA, "time"=NA, "jcu"=NA, "cc"=NA, "mortality.stage3"=NA, "birth.rate.mean"=NA,
                            "stage1"=NA, "stage2"=NA, "stage3"=NA ) [numeric(0), ]
 
-# A datafram to just store the total population size to make a quick plot at the end
+# A dataframx to just store the total population size to make a quick plot at the end
 total.pop <- matrix( ncol = num.time.steps, nrow = num.reps )
 
     
