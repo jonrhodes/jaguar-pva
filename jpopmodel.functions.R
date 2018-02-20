@@ -15,12 +15,12 @@ rtpois <- function( num.of.samples, pre.truncated.mean ) {
 	#   pre.truncated.mean of 1.06 gives a truncated mean of 1.62
 
 	T <- pre.truncated.mean
-  	U<-runif(num.of.samples)   # the uniform sample
+  	U <- runif(num.of.samples)   # the uniform sample
 
-	if(DEBUG.LEVEL>1){	cat('\n The resulting trucated mean is', T/(1 - exp(-T)), '\n' ) }
+	if(DEBUG.LEVEL>1){	cat('\n The resulting trucated mean is', T/(1 - exp(-T))) }
 
   	t = -log(1 - U*(1 - exp(-T))) # the "first" event-times   
-  	T1<-(T - t) # the set of (T-t)
+  	T1 <- (T - t) # the set of (T-t)
   	X <- rpois(num.of.samples,T1)+1  # the final truncated Poisson sample
   	return(X)
 
@@ -55,10 +55,11 @@ reproduce <- function( cur.pop, birth.rate, litter.size.dist ) {
     
     s1 <- cur.pop[1,]
     s3 <- cur.pop[3,]
-    pop <- rep(0, length(s1) )
+
+    pop <- rep(0, length(s3) )
 
     # Loop over JCUs and decide which give birth
-    for( i in 1:length(s1) ) {
+    for( i in 1:length(s3) ) {
 
     
     	# First determine the number in stage 3 that reproduce
@@ -128,6 +129,7 @@ apply.dispersal <- function( current.pop, jcu.cc, disp.mort.mat ) {
 	dispersal.ctr <- 0
 	dispersal.mort.ctr <- 0
 
+
 	for( i in jcu.vec ){
 
 		if(DEBUG.LEVEL > 1) cat('\njcu=', i, 'cc=', jcu.cc[i], 'stage3.pop=',current.pop[3,i], 
@@ -137,28 +139,33 @@ apply.dispersal <- function( current.pop, jcu.cc, disp.mort.mat ) {
 
         # calculate the number of adult individuals above carrying capactiy, as they
         # are the ones we assume will disperse
-		num.to.disperse <- current.pop[3,i] - jcu.cc[i]
+		num.to.disperse <- current.pop['stage3',i] - jcu.cc[i]
 
 		
 		# if there are more stage 3 adults than the cc disperse them
 		if( num.to.disperse > 0) {
 
 
+            # ------------------------------------------------------------
+            # Work out where they disperse to and how many die  on the way
+            # ------------------------------------------------------------
+
             # choose the jcus that each jaguar will try and disperse to;
             # select each one randomly for now NOTE: here is where to change
             # things if we want to try something other than random choices of
             # where to disperse to
 
-            # TODO: 
+            # TODO: need to limit which JCUs they can reach based on
+            # assumption of max dispersal distance
 			dest.jcus <- sample(jcu.vec[-i], num.to.disperse, replace=TRUE )
 
 			# reduce the pop of the source jcu by the number that disperse
-			current.pop[3,i] <- current.pop[3,i] - num.to.disperse
+			current.pop[3,i] <- current.pop['stage3',i] - num.to.disperse
 
 			# determine which ones survive the dispersal
 			survival.vec <- rbinom(n=num.to.disperse, size=1, prob=(1-disp.mort.mat[source.jcu, dest.jcus]) )
 			dest.jcus.surviving <- dest.jcus[which(survival.vec==1)]
-			no.die.dispersing <- length(which(survival.vec==0))
+			num.die.dispersing <- length(which(survival.vec==0))
 
 			# determine the total number going to each jcu
 			# Note: rle: Run Length Encoding to compute the lengths and values of runs of equal values 
@@ -167,12 +174,34 @@ apply.dispersal <- function( current.pop, jcu.cc, disp.mort.mat ) {
 			receive.cts <- rep(0, length(jcu.vec))
 			receive.cts[rle.cts$values] <-  rle.cts$lengths
 
+            # -------------------------------------------------------------
+            # Of the individuals arriving in a patch, work out how many can
+            # have territories (ie if the patch is not yet at it's carrying
+            # capacity), and how many become floaters (assocuated with the
+            # patch but not having a terriotiry)
+            # -------------------------------------------------------------
+
+            # for each JCU, determine how many (if any) home ranges are left to fill
+            # before reaching K
+            number.of.home.ranges.left <-  jcu.cc - current.pop['stage3',]
+            number.of.home.ranges.left[number.of.home.ranges.left<=0] <- 0
+
+            # determine how mant of the arriving individuals become floaters
+            receive.cts.floaters <- receive.cts - number.of.home.ranges.left
+            receive.cts.floaters[receive.cts.floaters<0] <- 0 
+
+            # determine how many arriving individuals get territories (the
+            # remainder that don't become floaters)
+            receive.cts.stage3 <- receive.cts - receive.cts.floaters
+            
 			# update the population
-			current.pop[3,] <- current.pop[3,] + receive.cts
+            #current.pop[3,] <- current.pop['stage3',] + receive.cts
+            current.pop['stage3',] <- current.pop['stage3',] + receive.cts.stage3
+			current.pop['floaters',] <- current.pop['floaters',] + receive.cts.floaters
 
 			# track some dispersal stats
 			dispersal.ctr <- dispersal.ctr + num.to.disperse
-			dispersal.mort.ctr <- dispersal.mort.ctr + no.die.dispersing
+			dispersal.mort.ctr <- dispersal.mort.ctr + num.die.dispersing
 
 			
 		}
@@ -181,7 +210,7 @@ apply.dispersal <- function( current.pop, jcu.cc, disp.mort.mat ) {
 	}
 	#browser()
 	
-	if(DEBUG.LEVEL>0) cat(' (No disp:', dispersal.ctr, 'mort in disp:', dispersal.mort.ctr, ')')
+	if(DEBUG.LEVEL>0) cat(' (Num disp:', dispersal.ctr, 'mort in disp:', dispersal.mort.ctr, ')')
 	
 	return (current.pop)
 }

@@ -19,9 +19,11 @@ source('jpopmodel.functions.R')
         # Define the name parameters of the model
         # ------------------------------------------------
 
-DEBUG.LEVEL <- 0  # 0-none; 1-terse, 2-verbose
-num.time.steps <- 80
-num.reps <- 100
+DEBUG.LEVEL <- 2  # 0-none; 1-terse, 2-verbose
+# num.time.steps <- 80
+# num.reps <- 20
+num.time.steps <- 20
+num.reps <- 1
 OPT.INCLUDE.DISPERSAL <- TRUE
 output.filename <- 'jpopmodel_data_disp.Rdata'
 
@@ -43,8 +45,9 @@ num.jcus <- 3
 num.life.stages <- 3
 
 
-jcu.att <- data.frame( cc=c(20,20,20), #15),
-                       #cc=c(5,45,45,40),
+jcu.att <- data.frame( #cc=c(20,20,20), #15),
+                       cc=c(4,4,4),
+
                       #mortality.stage3=c(0.5,0.15,0.2,0.4), #assuming same for each stage for now so one no per JCU
                       # mortality.stage1=rep(0.38,num.jcus),
                       # mortality.stage2=rep(0.26,num.jcus),
@@ -60,13 +63,18 @@ jcu.att <- data.frame( cc=c(20,20,20), #15),
                       
                       )
 
-# Make an initial population (random from now) 
+# Make an initial population (random from now), row for each 3 life stage and one for the floaters 
 #initial.pop <- matrix( ncol=num.jcus, nrow=num.life.stages, sample(1:10, size=num.jcus*3, replace=TRUE ) )
-initial.pop <- matrix( ncol=num.jcus, nrow=num.life.stages, rep(5, num.jcus*3) ) # in in each stage
+initial.pop <- matrix( ncol=num.jcus, nrow=num.life.stages+1, rep(5, num.jcus*4) ) # in in each stage
 
 #initial.pop <- matrix( ncol=num.jcus, nrow=num.life.stages, c(10,7,10,12),byrow=TRUE )
-colnames(initial.pop) <- paste( 'jcu', 1:num.jcus, sep='') # set column names
-rownames(initial.pop) <- paste( 'stage', 1:num.life.stages, sep='') # set the row names
+colnames(initial.pop) <- paste0( 'jcu', 1:num.jcus) # set column names
+rownames(initial.pop) <- c(paste0( 'stage', 1:num.life.stages ), 'floaters' ) # set the row names
+
+# Set the number of floaters to be zero
+initial.pop['floaters',] <- 0
+
+
 
 # Make a dispersal matrxi between each of the JCUs
 disp.mort.mat <- matrix(ncol=num.jcus, nrow=num.jcus)
@@ -87,7 +95,7 @@ if( dim(jcu.att)[1] != num.jcus ) stop( '\n\nERROR JCU attributes not conistent 
 
 # A data.frame to store the full state of the system
 all.outputs <- data.frame ( "rep"=NA, "time"=NA, "jcu"=NA, "cc"=NA, "mortality.stage3"=NA, "birth.rate.mean"=NA,
-                           "stage1"=NA, "stage2"=NA, "stage3"=NA ) [numeric(0), ]
+                           "stage1"=NA, "stage2"=NA, "stage3"=NA, "floaters"=NA ) [numeric(0), ]
 
 # A dataframx to just store the total population size to make a quick plot at the end
 total.pop <- matrix( ncol = num.time.steps, nrow = num.reps )
@@ -114,12 +122,13 @@ for( rep in 1:num.reps) {
         if( dim(all.outputs)[1] == 0 ) all.outputs[1,] <- init.info
         else  all.outputs <- rbind( all.outputs, init.info ) # otherwise append it           
     }
+    
     # Save the total population size to make a quick plot at the end 
     total.pop[rep, time] <- sum(initial.pop)
     if(DEBUG.LEVEL>0) cat( '\n Time step = ', time )
     if(DEBUG.LEVEL>1) show(initial.pop) 
    
-
+   
     # Now loop over time steps from 2 onwards
     current.pop <- initial.pop
     for( time in 2:num.time.steps) {
@@ -167,10 +176,10 @@ for( rep in 1:num.reps) {
         
     }
     
-    if(DEBUG.LEVEL>0) cat("\n")
+    if(DEBUG.LEVEL>0) cat("\n-----------------------------------------------\n")
   
 }
-
+ 
 cat('\n')
 
 
