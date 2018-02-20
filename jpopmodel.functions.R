@@ -134,15 +134,22 @@ apply.dispersal <- function( current.pop, jcu.cc, disp.mort.mat ) {
 		 	'no over cc=', max(current.pop[3,i] - jcu.cc[i],0) , '\n')
 
 		source.jcu <- i
+
+        # calculate the number of adult individuals above carrying capactiy, as they
+        # are the ones we assume will disperse
 		num.to.disperse <- current.pop[3,i] - jcu.cc[i]
 
 		
-		# If there are more stage 3 adults than the cc disperse them
+		# if there are more stage 3 adults than the cc disperse them
 		if( num.to.disperse > 0) {
 
 
-			# choose the jcus that each jaguar try and disperse to 
-			# select each one randomly for now
+            # choose the jcus that each jaguar will try and disperse to;
+            # select each one randomly for now NOTE: here is where to change
+            # things if we want to try something other than random choices of
+            # where to disperse to
+
+            # TODO: 
 			dest.jcus <- sample(jcu.vec[-i], num.to.disperse, replace=TRUE )
 
 			# reduce the pop of the source jcu by the number that disperse
@@ -160,7 +167,7 @@ apply.dispersal <- function( current.pop, jcu.cc, disp.mort.mat ) {
 			receive.cts <- rep(0, length(jcu.vec))
 			receive.cts[rle.cts$values] <-  rle.cts$lengths
 
-			# Update the population
+			# update the population
 			current.pop[3,] <- current.pop[3,] + receive.cts
 
 			# track some dispersal stats
