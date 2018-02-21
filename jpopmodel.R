@@ -19,11 +19,11 @@ source('jpopmodel.functions.R')
         # Define the name parameters of the model
         # ------------------------------------------------
 
-DEBUG.LEVEL <- 1  # 0-none; 1-terse, 2-verbose
+DEBUG.LEVEL <- 2  # 0-none; 1-terse, 2-verbose
 # num.time.steps <- 80
 # num.reps <- 20
-num.time.steps <- 20
-num.reps <- 1
+num.time.steps <- 40
+num.reps <- 10
 OPT.INCLUDE.DISPERSAL <- TRUE
 output.filename <- 'jpopmodel_data_disp.Rdata'
 
@@ -66,7 +66,7 @@ jcu.att <- data.frame( #cc=c(20,20,20), #15),
 
 # Make an initial population (random from now), row for each 3 life stage and one for the floaters 
 #initial.pop <- matrix( ncol=num.jcus, nrow=num.life.stages, sample(1:10, size=num.jcus*3, replace=TRUE ) )
-initial.pop <- matrix( ncol=num.jcus, nrow=num.life.stages+1, rep(5, num.jcus*4) ) # in in each stage
+initial.pop <- matrix( ncol=num.jcus, nrow=num.life.stages+1, rep(20, num.jcus*4) ) # in in each stage
 
 #initial.pop <- matrix( ncol=num.jcus, nrow=num.life.stages, c(10,7,10,12),byrow=TRUE )
 colnames(initial.pop) <- paste0( 'jcu', 1:num.jcus) # set column names
@@ -79,7 +79,7 @@ initial.pop['floaters',] <- 0
 
 # Make a dispersal matrxi between each of the JCUs
 disp.mort.mat <- matrix(ncol=num.jcus, nrow=num.jcus)
-disp.mort.mat[] <- round(runif(min=0.2, max=0.6, num.jcus^2),2)  # set all values to be the same for now
+disp.mort.mat[] <- round(runif(min=0.02, max=0.06, num.jcus^2),2)  # set all values to be the same for now
 diag(disp.mort.mat) <- 0  # set the diagonal values to zero.
 
 

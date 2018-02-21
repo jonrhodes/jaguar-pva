@@ -17,7 +17,7 @@ rtpois <- function( num.of.samples, pre.truncated.mean ) {
 	T <- pre.truncated.mean
   	U <- runif(num.of.samples)   # the uniform sample
 
-	if(DEBUG.LEVEL>1){	cat('\n The resulting trucated mean is', T/(1 - exp(-T))) }
+	#if(DEBUG.LEVEL>1){	cat('\n The resulting trucated mean is', T/(1 - exp(-T))) }
 
   	t = -log(1 - U*(1 - exp(-T))) # the "first" event-times   
   	T1 <- (T - t) # the set of (T-t)
@@ -95,6 +95,7 @@ reproduce <- function( cur.pop, birth.rate, litter.size.dist ) {
 }
 
 #---------------------------------------------------------------
+
 apply.mortality <- function(pop, mortality.s1, mortality.s2, mortality.s3, 
                             mortality.floaters ){
 
@@ -111,17 +112,40 @@ apply.mortality <- function(pop, mortality.s1, mortality.s2, mortality.s3,
 }
 
 #---------------------------------------------------------------
+# function to work out how many floaters can disperse into their 
+# attached JCU
+determine.floaters.moving.to.jcu <- function(K, pop, floaters){
 
-disperse.stage <- function() {
+    territories.available <- max(K - pop, 0)
+    
+    num.floaters.moving.into.jcu <- 0
+
+    if( floaters > 0 & territories.available > 0){
+            # if that is the case, floaters first disperse into available
+            # territories of the JCU they are attached to
+            if( territories.available >= floaters ){    
+                # all floaters move inot the JCU
+                num.floaters.moving.into.jcu <- floaters
+            } else {
+                # there are more floaters than territories
+                num.floaters.moving.into.jcu <- territories.available
+            }
+    }
 
 
+        return(num.floaters.moving.into.jcu)
 }
+
+#tests
+
+#determine.floaters.moving.to.jcu(K=4, pop=2, floaters=4 ) # ans=2
+#determine.floaters.moving.to.jcu(K=4, pop=4, floaters=4 ) # ans=0
+#determine.floaters.moving.to.jcu(K=10, pop=15, floaters=15 ) # ans 0
+#determine.floaters.moving.to.jcu(K=10, pop=0, floaters=15 ) # ans 10
 
 #---------------------------------------------------------------
 
 apply.dispersal <- function( pop, jcu.cc, disp.mort.mat ) {
-
-	# For now, all jaguars over cc try and disperse
 
 	if(DEBUG.LEVEL > 1) {cat( '\n  In dispersal function\n'); show(pop) }
 
@@ -129,22 +153,48 @@ apply.dispersal <- function( pop, jcu.cc, disp.mort.mat ) {
 	dispersal.ctr <- 0
 	dispersal.mort.ctr <- 0
 
-
 	for( source.jcu in jcu.vec ){
 
-		if(DEBUG.LEVEL > 1) cat('\njcu=', i, 'cc=', jcu.cc[i], 'stage3.pop=',pop[3,i], 
-		 	'no over cc=', max(pop[3,i] - jcu.cc[i],0) , '\n')
+        # print out current JCU  
+        i<- source.jcu
+        if(DEBUG.LEVEL > 1) cat('\njcu=', i, 'cc=', jcu.cc[i], 'stage3.pop=',pop[3,i], 'floater.pop=',pop[4,i],
+            'no over cc=', max(pop[3,i] - jcu.cc[i],0) , '\n')
 
 
+        # ------------------------------------------------------------
+        # Do floater dispersal into attached JCU
+        # ------------------------------------------------------------
 
+        # first check if there any floaters associated with the JCU and if any
+        # territories have become available (i.e. due to mortality the
+        # population is now below K)
+        num.floaters.moving.into.jcu <- determine.floaters.moving.to.jcu(jcu.cc[source.jcu], 
+                                            pop['stage3', source.jcu], pop['floaters', source.jcu])
+
+        if(DEBUG.LEVEL > 1 & num.floaters.moving.into.jcu >0 ) {
+            cat( '\n***************', num.floaters.moving.into.jcu, 'floater(s) moving into their attached JCU\n') 
+            #browser()
+        }
+
+        # update the population matrix
+        pop['stage3', source.jcu] <- pop['stage3', source.jcu] + num.floaters.moving.into.jcu
+        pop['floaters', source.jcu] <- pop['floaters', source.jcu] - num.floaters.moving.into.jcu
+
+        
+        
         # calculate the number of adult individuals above carrying capactiy, as they
         # are the ones we assume will disperse
-		num.to.disperse <- pop['stage3',source.jcu] - jcu.cc[source.jcu]
+		num.stage3.to.disperse <- max(pop['stage3',source.jcu] - jcu.cc[source.jcu], 0)
+        num.floaters.to.disperse <- pop['floaters', source.jcu]
+        total.to.disperse <- num.stage3.to.disperse + num.floaters.to.disperse
 
-		
+
+        # reduce the pop of the source jcu by the number that disperse
+        pop['stage3',source.jcu] <- pop['stage3',source.jcu] - num.stage3.to.disperse
+        pop['floaters',source.jcu] <- 0
+
 		# if there are more stage 3 adults than the cc disperse them
-		if( num.to.disperse > 0) {
-
+		if( total.to.disperse > 0) {
 
             # ------------------------------------------------------------
             # Work out where they disperse to and how many die  on the way
@@ -157,13 +207,10 @@ apply.dispersal <- function( pop, jcu.cc, disp.mort.mat ) {
 
             # TODO: need to limit which JCUs they can reach based on
             # assumption of max dispersal distance
-			dest.jcus <- sample(jcu.vec[-source.jcu], num.to.disperse, replace=TRUE )
-
-			# reduce the pop of the source jcu by the number that disperse
-			pop['stage3',source.jcu] <- pop['stage3',source.jcu] - num.to.disperse
-
+			dest.jcus <- sample(jcu.vec[-source.jcu], total.to.disperse, replace=TRUE )
+			
 			# determine which ones survive the dispersal
-			survival.vec <- rbinom(n=num.to.disperse, size=1, prob=(1-disp.mort.mat[source.jcu, dest.jcus]) )
+			survival.vec <- rbinom(n=total.to.disperse, size=1, prob=(1-disp.mort.mat[source.jcu, dest.jcus]) )
 			dest.jcus.surviving <- dest.jcus[which(survival.vec==1)]
 			num.die.dispersing <- length(which(survival.vec==0))
 
@@ -200,7 +247,7 @@ apply.dispersal <- function( pop, jcu.cc, disp.mort.mat ) {
 			pop['floaters',] <- pop['floaters',] + receive.cts.floaters
 
 			# track some dispersal stats
-			dispersal.ctr <- dispersal.ctr + num.to.disperse
+			dispersal.ctr <- dispersal.ctr + total.to.disperse
 			dispersal.mort.ctr <- dispersal.mort.ctr + num.die.dispersing
 
 			
@@ -208,7 +255,7 @@ apply.dispersal <- function( pop, jcu.cc, disp.mort.mat ) {
 
 
 	}
-	#browser()
+	browser()
 	
 	if(DEBUG.LEVEL>0) cat(' (Num disp:', dispersal.ctr, 'mort in disp:', dispersal.mort.ctr, ')')
 	
