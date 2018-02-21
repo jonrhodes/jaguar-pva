@@ -95,17 +95,17 @@ reproduce <- function( cur.pop, birth.rate, litter.size.dist ) {
 }
 
 #---------------------------------------------------------------
-apply.mortality <- function(pop, mortality.s1, mortality.s2, mortality.s3 ){
+apply.mortality <- function(pop, mortality.s1, mortality.s2, mortality.s3, 
+                            mortality.floaters ){
 
     # flip a weighted coin to decide how many die
-    # note: currently assumes all stages have the same mortality
-    # mortality.function = function(x) rbinom(n=1, size=x, prob=(1-mortality))
-    # return( sapply( pop, mortality.function) )
-
+    #browser()
     pop['stage1'] <- rbinom(n=1, size=pop['stage1'], prob=(1-mortality.s1))
     pop['stage2'] <- rbinom(n=1, size=pop['stage2'], prob=(1-mortality.s2))    
     pop['stage3'] <- rbinom(n=1, size=pop['stage3'], prob=(1-mortality.s3))
+    pop['floaters'] <- rbinom(n=1, size=pop['floaters'], prob=(1-mortality.floaters))
 
+    #browser()
     return(pop)
     
 }
@@ -119,27 +119,27 @@ disperse.stage <- function() {
 
 #---------------------------------------------------------------
 
-apply.dispersal <- function( current.pop, jcu.cc, disp.mort.mat ) {
+apply.dispersal <- function( pop, jcu.cc, disp.mort.mat ) {
 
 	# For now, all jaguars over cc try and disperse
 
-	if(DEBUG.LEVEL > 1) {cat( '\n  In dispersal function\n'); show(current.pop) }
+	if(DEBUG.LEVEL > 1) {cat( '\n  In dispersal function\n'); show(pop) }
 
 	jcu.vec <- 1:length(jcu.cc)
 	dispersal.ctr <- 0
 	dispersal.mort.ctr <- 0
 
 
-	for( i in jcu.vec ){
+	for( source.jcu in jcu.vec ){
 
-		if(DEBUG.LEVEL > 1) cat('\njcu=', i, 'cc=', jcu.cc[i], 'stage3.pop=',current.pop[3,i], 
-		 	'no over cc=', max(current.pop[3,i] - jcu.cc[i],0) , '\n')
+		if(DEBUG.LEVEL > 1) cat('\njcu=', i, 'cc=', jcu.cc[i], 'stage3.pop=',pop[3,i], 
+		 	'no over cc=', max(pop[3,i] - jcu.cc[i],0) , '\n')
 
-		source.jcu <- i
+
 
         # calculate the number of adult individuals above carrying capactiy, as they
         # are the ones we assume will disperse
-		num.to.disperse <- current.pop['stage3',i] - jcu.cc[i]
+		num.to.disperse <- pop['stage3',source.jcu] - jcu.cc[source.jcu]
 
 		
 		# if there are more stage 3 adults than the cc disperse them
@@ -157,10 +157,10 @@ apply.dispersal <- function( current.pop, jcu.cc, disp.mort.mat ) {
 
             # TODO: need to limit which JCUs they can reach based on
             # assumption of max dispersal distance
-			dest.jcus <- sample(jcu.vec[-i], num.to.disperse, replace=TRUE )
+			dest.jcus <- sample(jcu.vec[-source.jcu], num.to.disperse, replace=TRUE )
 
 			# reduce the pop of the source jcu by the number that disperse
-			current.pop[3,i] <- current.pop['stage3',i] - num.to.disperse
+			pop['stage3',source.jcu] <- pop['stage3',source.jcu] - num.to.disperse
 
 			# determine which ones survive the dispersal
 			survival.vec <- rbinom(n=num.to.disperse, size=1, prob=(1-disp.mort.mat[source.jcu, dest.jcus]) )
@@ -183,7 +183,7 @@ apply.dispersal <- function( current.pop, jcu.cc, disp.mort.mat ) {
 
             # for each JCU, determine how many (if any) home ranges are left to fill
             # before reaching K
-            number.of.home.ranges.left <-  jcu.cc - current.pop['stage3',]
+            number.of.home.ranges.left <-  jcu.cc - pop['stage3',]
             number.of.home.ranges.left[number.of.home.ranges.left<=0] <- 0
 
             # determine how mant of the arriving individuals become floaters
@@ -195,9 +195,9 @@ apply.dispersal <- function( current.pop, jcu.cc, disp.mort.mat ) {
             receive.cts.stage3 <- receive.cts - receive.cts.floaters
             
 			# update the population
-            #current.pop[3,] <- current.pop['stage3',] + receive.cts
-            current.pop['stage3',] <- current.pop['stage3',] + receive.cts.stage3
-			current.pop['floaters',] <- current.pop['floaters',] + receive.cts.floaters
+            #pop[3,] <- pop['stage3',] + receive.cts
+            pop['stage3',] <- pop['stage3',] + receive.cts.stage3
+			pop['floaters',] <- pop['floaters',] + receive.cts.floaters
 
 			# track some dispersal stats
 			dispersal.ctr <- dispersal.ctr + num.to.disperse
@@ -212,7 +212,7 @@ apply.dispersal <- function( current.pop, jcu.cc, disp.mort.mat ) {
 	
 	if(DEBUG.LEVEL>0) cat(' (Num disp:', dispersal.ctr, 'mort in disp:', dispersal.mort.ctr, ')')
 	
-	return (current.pop)
+	return (pop)
 }
 
 #---------------------------------------------------------------

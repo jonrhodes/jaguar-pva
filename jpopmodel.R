@@ -19,7 +19,7 @@ source('jpopmodel.functions.R')
         # Define the name parameters of the model
         # ------------------------------------------------
 
-DEBUG.LEVEL <- 2  # 0-none; 1-terse, 2-verbose
+DEBUG.LEVEL <- 1  # 0-none; 1-terse, 2-verbose
 # num.time.steps <- 80
 # num.reps <- 20
 num.time.steps <- 20
@@ -55,7 +55,8 @@ jcu.att <- data.frame( #cc=c(20,20,20), #15),
                       mortality.stage1=c(0.38, 0.44, 0.58),
                       mortality.stage2=c(0.26, 0.33, 0.55),
                       mortality.stage3=c(0.14, 0.27, 0.51),
-                      
+                      mortality.floaters=c(0.14, 0.27, 0.51), # assume floaters the same as stage 3 for now.
+
                       # Assuming only last stage gives birth, this is the prob of giving birth to 1 or more offspring
                       birth.rate.mean=rep(0.45, num.jcus), 
                       birth.rate.upper.bound=rep(0.3, num.jcus), # not currently used
@@ -144,10 +145,12 @@ for( rep in 1:num.reps) {
         
         # loop through each JCU and apply the JCU specific mortality to each life stage
         for( jcu in 1:num.jcus){
-
+            #browser()
             # Apply mortality to the populations in each JCU
             current.pop[,jcu] <- apply.mortality(current.pop[,jcu], jcu.att$mortality.stage1[jcu],
-                                                jcu.att$mortality.stage2[jcu], jcu.att$mortality.stage3[jcu])
+                                                jcu.att$mortality.stage2[jcu],
+                                                jcu.att$mortality.stage3[jcu], 
+                                                jcu.att$mortality.floaters[jcu])
         }
 
         # apply dispersal
@@ -173,10 +176,10 @@ for( rep in 1:num.reps) {
         #if(DEBUG){ show(current.pop) }
         
         
-        
+      if(DEBUG.LEVEL>0) cat("\n-----------------------------------------------\n")    
     }
     
-    if(DEBUG.LEVEL>0) cat("\n-----------------------------------------------\n")
+    
   
 }
  
