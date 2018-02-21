@@ -179,7 +179,6 @@ apply.dispersal <- function( pop, jcu.cc, disp.mort.mat ) {
         # update the population matrix
         pop['stage3', source.jcu] <- pop['stage3', source.jcu] + num.floaters.moving.into.jcu
         pop['floaters', source.jcu] <- pop['floaters', source.jcu] - num.floaters.moving.into.jcu
-
         
         
         # calculate the number of adult individuals above carrying capactiy, as they
@@ -255,7 +254,7 @@ apply.dispersal <- function( pop, jcu.cc, disp.mort.mat ) {
 
 
 	}
-	browser()
+
 	
 	if(DEBUG.LEVEL>0) cat(' (Num disp:', dispersal.ctr, 'mort in disp:', dispersal.mort.ctr, ')')
 	

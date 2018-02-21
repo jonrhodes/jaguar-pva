@@ -45,8 +45,8 @@ num.jcus <- 3
 num.life.stages <- 3
 
 
-jcu.att <- data.frame( #cc=c(20,20,20), #15),
-                       cc=c(4,4,4),
+jcu.att <- data.frame( #K=c(20,20,20), #15),
+                       K=c(4,4,4),
 
                       #mortality.stage3=c(0.5,0.15,0.2,0.4), #assuming same for each stage for now so one no per JCU
                       # mortality.stage1=rep(0.38,num.jcus),
@@ -83,6 +83,9 @@ disp.mort.mat[] <- round(runif(min=0.02, max=0.06, num.jcus^2),2)  # set all val
 diag(disp.mort.mat) <- 0  # set the diagonal values to zero.
 
 
+
+
+
         # ------------------------------------------------
         # Validity checks
         # ------------------------------------------------
@@ -95,7 +98,7 @@ if( dim(jcu.att)[1] != num.jcus ) stop( '\n\nERROR JCU attributes not conistent 
         # ------------------------------------------------
 
 # A data.frame to store the full state of the system
-all.outputs <- data.frame ( "rep"=NA, "time"=NA, "jcu"=NA, "cc"=NA, "mortality.stage3"=NA, "birth.rate.mean"=NA,
+all.outputs <- data.frame ( "rep"=NA, "time"=NA, "jcu"=NA, "K"=NA, "mortality.stage3"=NA, "birth.rate.mean"=NA,
                            "stage1"=NA, "stage2"=NA, "stage3"=NA, "floaters"=NA ) [numeric(0), ]
 
 # A dataframx to just store the total population size to make a quick plot at the end
@@ -116,7 +119,7 @@ for( rep in 1:num.reps) {
     # First save the initial values for timestep 1 for all jcus
     time<-1
     for( jcu in 1:num.jcus){
-        init.info <- c(rep, time, jcu, jcu.att[jcu,"cc"], jcu.att[jcu,"mortality.stage3"], 
+        init.info <- c(rep, time, jcu, jcu.att[jcu,"K"], jcu.att[jcu,"mortality.stage3"], 
                   jcu.att[jcu,"birth.rate.mean"], initial.pop[,jcu] )
 
         # If first data entry, replace the first line
@@ -155,7 +158,7 @@ for( rep in 1:num.reps) {
 
         # apply dispersal
         if( OPT.INCLUDE.DISPERSAL ) 
-            current.pop <- apply.dispersal(current.pop, jcu.att$cc, disp.mort.mat)
+            current.pop <- apply.dispersal(current.pop, jcu.att$K, disp.mort.mat)
         
         # ------------------------------------------------
         # Save the current info 
@@ -166,7 +169,7 @@ for( rep in 1:num.reps) {
 
         for( jcu in 1:num.jcus){        
             # Build a vector for the current info of the system
-            current.info <- c(rep, time, jcu, jcu.att[jcu,"cc"], jcu.att[jcu,"mortality.stage3"], 
+            current.info <- c(rep, time, jcu, jcu.att[jcu,"K"], jcu.att[jcu,"mortality.stage3"], 
                 	           jcu.att[jcu,"birth.rate.mean"], current.pop[,jcu] )
                	
             # Add the the all outouts dataframe
