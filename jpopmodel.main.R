@@ -1,25 +1,34 @@
 
 
-run.jpop.model <-function(initial.pop, jcu.att, disp.mort.mat) {
-
-
             # ------------------------------------------------
-            # Validity checks
+            # Low level options
             # ------------------------------------------------
 
-    if( dim(jcu.att)[1] != num.jcus ) stop( '\n\nERROR JCU attributes not conistent with number of JCUs')
+DEBUG.LEVEL <- 0  # 0-none; 1-terse, 2-verbose
 
+# Option of whether to use a truncated Poisson distribution for determing the
+# number offspring (TRUE) or whether to assume there are only 1 or 2 offspring
+# (FALSE). The truncated Poisson means that occasionally there may be 5 or 6
+# offspring.
+OPT.USE.TRUNCATED.POISSON.FOR.REPRODUCTION <- TRUE 
+OPT.INCLUDE.DISPERSAL <- TRUE
+OPT.NUMBER.OF.LIFE.STAGES <- 3
+
+run.jpop.model <-function(expert.ID, expert.realization, num.stoch.realizatons, initial.pop, jcu.att, disp.mort.mat, num.time.steps ) {
+
+    # determine the numner of JCUs from the jcu.attributes data frame
+    num.jcus <- dim(jcu.attributes)[1]
 
             # ------------------------------------------------
             # Make some objects to store results as the model runs
             # ------------------------------------------------
 
     # A data.frame to store the full state of the system
-    all.outputs <- data.frame ( "rep"=NA, "time"=NA, "jcu"=NA, "K"=NA, "mortality.stage3"=NA, "birth.rate.mean"=NA,
-                               "stage1"=NA, "stage2"=NA, "stage3"=NA, "floaters"=NA ) [numeric(0), ]
+    all.outputs <- data.frame ( 'expert.ID'=NA, 'expert.realization'=NA, 'stoch.realization'=NA, 'time'=NA, 'jcu'=NA, 'K'=NA, 'mortality.stage3'=NA, 'birth.rate.mean'=NA,
+                               'stage1'=NA, 'stage2'=NA, 'stage3'=NA, 'floaters'=NA ) [numeric(0), ]
 
     # A dataframx to just store the total population size to make a quick plot at the end
-    total.pop <- matrix( ncol = num.time.steps, nrow = num.reps )
+    total.pop <- matrix( ncol = num.time.steps, nrow = num.stoch.realizatons )
 
         
         
@@ -28,7 +37,7 @@ run.jpop.model <-function(initial.pop, jcu.att, disp.mort.mat) {
             # ------------------------------------------------
 
 
-    for( rep in 1:num.reps) {
+    for( rep in 1:num.stoch.realizatons) {
         
         if(DEBUG.LEVEL>1){cat( "\n\n--------------------------------")}
         if(rep%%10==0) cat( '\n Rep = ', rep ) # print every 10th rep 
@@ -36,7 +45,7 @@ run.jpop.model <-function(initial.pop, jcu.att, disp.mort.mat) {
         # First save the initial values for timestep 1 for all jcus
         time<-1
         for( jcu in 1:num.jcus){
-            init.info <- c(rep, time, jcu, jcu.att[jcu,"K"], jcu.att[jcu,"mortality.stage3"], 
+            init.info <- c(expert.ID, expert.realization, rep, time, jcu, jcu.att[jcu,"K"], jcu.att[jcu,"mortality.stage3"], 
                       jcu.att[jcu,"birth.rate.mean"], initial.pop[,jcu] )
 
             # If first data entry, replace the first line
@@ -58,7 +67,7 @@ run.jpop.model <-function(initial.pop, jcu.att, disp.mort.mat) {
             if(DEBUG.LEVEL>0) cat( '\n Time step = ', time)
 
             # age the population
-            current.pop <- age.population(current.pop, num.life.stages)
+            current.pop <- age.population(current.pop, OPT.NUMBER.OF.LIFE.STAGES)
                 
             # do reproduction (assumes for now only last stage reproduces)
             current.pop <- reproduce(current.pop, jcu.att$birth.rate.mean, litter.size.dist)
@@ -86,7 +95,7 @@ run.jpop.model <-function(initial.pop, jcu.att, disp.mort.mat) {
 
             for( jcu in 1:num.jcus){        
                 # Build a vector for the current info of the system
-                current.info <- c(rep, time, jcu, jcu.att[jcu,"K"], jcu.att[jcu,"mortality.stage3"], 
+                current.info <- c(expert.ID, expert.realization, rep, time, jcu, jcu.att[jcu,"K"], jcu.att[jcu,"mortality.stage3"], 
                                    jcu.att[jcu,"birth.rate.mean"], current.pop[,jcu] )
                     
                 # Add the the all outouts dataframe
@@ -125,5 +134,8 @@ run.jpop.model <-function(initial.pop, jcu.att, disp.mort.mat) {
     # Save the outputs to file. This is used in the analyse.results.R
     # script. Note this currently gets overwritten each time the script
     # runs.
-    save(all.outputs, file=output.filename)
+
+    #save(all.outputs, file=output.filename)
+
+    return ( all.outputs )
 }

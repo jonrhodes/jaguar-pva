@@ -6,14 +6,14 @@
 rm(list=ls(all=TRUE))
 
 
-# Creates dataframe "all.outputs"
-results.file <- 'jpopmodel_data_nodisp.Rdata'
+# Creates dataframe "model.output"
+results.file <- 'jpopmodel_data_disp.Rdata'
 load ( results.file )
 
 
 # Get vales from the dataframe
-num.reps <- max(all.outputs$rep)
-time.steps.vec <- unique(all.outputs$time)
+num.reps <- max(model.output$stoch.realization)
+time.steps.vec <- unique(model.output$time)
 max.time <- max(time.steps.vec)
 
 
@@ -38,16 +38,16 @@ pop.traj.jcu3 <- matrix(ncol=length(time.steps.vec), nrow=num.reps)
 # Extract out the data to plot
 for(i in 1:num.reps ) {
     for( x in time.steps.vec ){
-        tmp <- subset( all.outputs, rep==i & time==x, select=stage1:stage3 )      
+        tmp <- subset( model.output, stoch.realization==i & time==x, select=stage1:stage3 )      
         pop.traj[i, x ] <- sum(tmp)
 
-        tmp1 <- subset( all.outputs, rep==i & time==x & jcu==1, select=stage1:stage3 )      
+        tmp1 <- subset( model.output, stoch.realization==i & time==x & jcu==1, select=stage1:stage3 )      
         pop.traj.jcu1[i, x ] <- sum(tmp1)
         
-        tmp2 <- subset( all.outputs, rep==i & time==x & jcu==2, select=stage1:stage3 )      
+        tmp2 <- subset( model.output, stoch.realization==i & time==x & jcu==2, select=stage1:stage3 )      
         pop.traj.jcu2[i, x ] <- sum(tmp2)
         
-        tmp3 <- subset( all.outputs, rep==i & time==x & jcu==3, select=stage1:stage3 )      
+        tmp3 <- subset( model.output, stoch.realization==i & time==x & jcu==3, select=stage1:stage3 )      
         pop.traj.jcu3[i, x ] <- sum(tmp3)
 
     }
@@ -55,7 +55,7 @@ for(i in 1:num.reps ) {
 
 par(mfrow=c(2,2))
 
-tot.cc <- sum(subset( all.outputs, rep==1 & time==1, select=cc ))
+tot.cc <- sum(subset( model.output, stoch.realization==1 & time==1, select=K ))
 
 # Use matplot to plot a curve for each realization 
 mean.traj <- apply(pop.traj,2,mean)
@@ -79,7 +79,7 @@ mean.traj <- apply(pop.traj.jcu1,2,mean)
 main.txt <- paste('JCU1 Low hunting pressure') 
 matplot(t(pop.traj.jcu1), type='l', main=main.txt, xlab='time', ylab='pop size' )
 lines(mean.traj, lwd=3)
-#abline( h=subset( all.outputs, jcu==1 & rep==1 & time==1, select=cc ), col='grey' )
+#abline( h=subset( model.output, jcu==1 & stoch.realization==1 & time==1, select=cc ), col='grey' )
 
 # plot jcu 2
 mean.traj <- apply(pop.traj.jcu2,2,mean)
@@ -87,7 +87,7 @@ mean.traj <- apply(pop.traj.jcu2,2,mean)
 main.txt <- paste('JCU2 Medium hunting pressure')
 matplot(t(pop.traj.jcu2), type='l', main=main.txt, xlab='time', ylab='pop size')
 lines(mean.traj, lwd=3)
-#abline( h=subset( all.outputs, jcu==2 & rep==1 & time==1, select=cc ), col='grey' )
+#abline( h=subset( model.output, jcu==2 & stoch.realization==1 & time==1, select=cc ), col='grey' )
 
 # plot jcu 3
 mean.traj <- apply(pop.traj.jcu3,2,mean)
@@ -95,7 +95,7 @@ mean.traj <- apply(pop.traj.jcu3,2,mean)
 main.txt <- paste('JCU3 High hunting pressure')
 matplot(t(pop.traj.jcu3), type='l', main=main.txt, xlab='time', ylab='pop size')
 lines(mean.traj, lwd=3)
-#abline( h=subset( all.outputs, jcu==3 & rep==1 & time==1, select=cc ), col='grey' )
+#abline( h=subset( model.output, jcu==3 & stoch.realization==1 & time==1, select=cc ), col='grey' )
 
 
 par(mfrow=c(1,1))
