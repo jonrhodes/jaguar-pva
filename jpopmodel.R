@@ -38,4 +38,4 @@ model.output <- run.jpop.model(expert.ID, expert.realization, stochastic.realiza
 # script. Note this currently gets overwritten each time the script
 # runs.
 
-save(model.output, file=output.filename)
+saveRDS(model.output, file=output.filename)

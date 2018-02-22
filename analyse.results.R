@@ -6,9 +6,9 @@
 rm(list=ls(all=TRUE))
 
 
-# Creates dataframe "model.output"
+# read in the results to analyse 
 results.file <- 'jpopmodel_data_disp.Rdata'
-load ( results.file )
+model.output <- readRDS ( results.file )
 
 
 # Get vales from the dataframe
