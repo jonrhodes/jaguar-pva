@@ -11,6 +11,13 @@ results.file <- 'jpopmodel_data_disp.Rdata'
 model.output <- readRDS ( results.file )
 
 
+# as have added data for running the model with multiple experts, just plot
+# the results for expert 1 for now. Later will want to generate plots for each
+# expert
+cat('\nPloting results only for exper 1 for now')
+model.output <- subset( model.output, expert.ID==1)
+
+
 # Get vales from the dataframe
 num.reps <- max(model.output$stoch.realization)
 time.steps.vec <- unique(model.output$time)
@@ -35,8 +42,10 @@ pop.traj.jcu3 <- matrix(ncol=length(time.steps.vec), nrow=num.reps)
 # Below is extracting the data for each JCU, could do the same for each
 # life stage also
 
+cat( '\nExtracting data for ecach JCU...')
 # Extract out the data to plot
 for(i in 1:num.reps ) {
+    if(i%%10==0) cat( '\n Rep = ', i) # print every 10th rep 
     for( x in time.steps.vec ){
         tmp <- subset( model.output, stoch.realization==i & time==x, select=stage1:stage3 )      
         pop.traj[i, x ] <- sum(tmp)
@@ -52,6 +61,9 @@ for(i in 1:num.reps ) {
 
     }
 }
+
+
+cat('\nGenerating plots')
 
 par(mfrow=c(2,2))
 
@@ -97,6 +109,6 @@ matplot(t(pop.traj.jcu3), type='l', main=main.txt, xlab='time', ylab='pop size')
 lines(mean.traj, lwd=3)
 #abline( h=subset( model.output, jcu==3 & stoch.realization==1 & time==1, select=cc ), col='grey' )
 
-
+cat('\n')
 par(mfrow=c(1,1))
 
