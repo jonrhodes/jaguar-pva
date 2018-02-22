@@ -17,11 +17,8 @@ jcu.attributes <- data.frame( K=c(20,20,20), #15),
                       mortality.stage3=c(0.14, 0.27, 0.51),
                       mortality.floaters=c(0.14, 0.27, 0.51), # assume floaters the same as stage 3 for now.
 
-                      # Assuming only last stage gives birth, this is the prob of giving birth to 1 or more offspring
-                      birth.rate.mean=rep(0.45, sim.num.JCUs), 
-                      birth.rate.upper.bound=rep(0.3, sim.num.JCUs), # not currently used
-                      birth.rate.lower.bound=rep(0.6, sim.num.JCUs)  # not currently used
-                      
+
+                      birth.rate.mean=rep(0.45, sim.num.JCUs)                   
                       )
 
 
