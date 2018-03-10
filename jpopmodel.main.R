@@ -4,7 +4,7 @@
             # Low level options
             # ------------------------------------------------
 
-DEBUG.LEVEL <- 0  # 0-none; 1-terse, 2-verbose
+DEBUG.LEVEL <- 2  # 0-none; 1-terse, 2-verbose
 
 # Option of whether to use a truncated Poisson distribution for determing the
 # number offspring (TRUE) or whether to assume there are only 1 or 2 offspring
