@@ -8,6 +8,9 @@
 
 rm(list=ls(all=TRUE))
 
+
+library(triangle)   # for sampling from a triagle distribution 
+
 # set seed if want to be able to reproduce results
 set.seed(44)
 
@@ -20,9 +23,10 @@ source('jpopmodel.main.R')
         # ------------------------------------------------
 
 
-time.steps <- 10 #50
-output.filename <- 'jpopmodel_data_disp.Rdata'
-stochastic.realizations <- 22 #20
+time.steps <- 50
+#output.filename <- 'jpopmodel_data_disp.Rdata'
+output.filename <- 'jpopmodel_test.Rdata'
+stochastic.realizations <- 50
 
 # Jonathan's code to provide, setting to dummy value for now.
 expert.ID = -999
@@ -62,3 +66,5 @@ for( expert in 2:3 ) {
 # runs.
 
 saveRDS(model.output, file=output.filename)
+cat('\nWrote ', output.filename, '\n')
+
