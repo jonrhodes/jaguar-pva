@@ -9,7 +9,7 @@
 rm(list=ls(all=TRUE))
 
 # set seed if want to be able to reproduce results
-set.seed(2)
+set.seed(44)
 
 source('jpopmodel.functions.R')
 source('jpopmodel.main.R')
@@ -20,9 +20,9 @@ source('jpopmodel.main.R')
         # ------------------------------------------------
 
 
-time.steps <- 50
+time.steps <- 10 #50
 output.filename <- 'jpopmodel_data_disp.Rdata'
-stochastic.realizations <- 20
+stochastic.realizations <- 22 #20
 
 # Jonathan's code to provide, setting to dummy value for now.
 expert.ID = -999
@@ -41,15 +41,15 @@ cat('\nExpert 1')
 model.output <- run.jpop.model(expert.ID=1, expert.realization, stochastic.realizations, initial.population, jcu.attributes, disp.mort.matrix, time.steps  )
 
 # dummy loop through experts
-#for( expert in 2:3 ) {
- # cat('\nExpert', expert)
-  # do a subsequent run to a append
-  #x <- run.jpop.model(expert, expert.realization, stochastic.realizations, initial.population, jcu.attributes, disp.mort.matrix, time.steps  )
+for( expert in 2:3 ) {
+ cat('\nExpert', expert)
+  #do a subsequent run to a append
+  x <- run.jpop.model(expert, expert.realization, stochastic.realizations, initial.population, jcu.attributes, disp.mort.matrix, time.steps  )
 
-  # append the run the current outputs 
-  #model.output <- rbind( model.output, x)
+  #append the run the current outputs 
+  model.output <- rbind( model.output, x)
 
-#}
+}
 
 
         # ------------------------------------------------
