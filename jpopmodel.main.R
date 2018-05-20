@@ -4,7 +4,7 @@
             # Low level options
             # ------------------------------------------------
 
-DEBUG.LEVEL <- 2  # 0-none; 1-terse, 2-verbose
+DEBUG.LEVEL <- 1  # 0-none; 1-terse, 2-verbose
 
 # Option of whether to use a truncated Poisson distribution for determing the
 # number offspring (TRUE) or whether to assume there are only 1 or 2 offspring
@@ -124,7 +124,8 @@ run.jpop.model <-function(expert.ID, expert.realization, num.stoch.realizatons, 
     # Plot the total pop trajectory of each realisation and also the mean
     # trajectory (using matplot() to automatically plot a curve for each
     # realization)
-    matplot ( t(total.pop), type = 'l', main= 'Total population', xlab='time', ylab='pop size',
+    plot.title <- paste0('Total population (expert ', expert.ID, ')' )
+    matplot ( t(total.pop), type = 'l', main= plot.title, xlab='time', ylab='pop size',
              #ylim=c(0, 120)
              ylim=c(0, max(total.pop))
             )
