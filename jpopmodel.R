@@ -71,3 +71,5 @@ for( expert in 2:3 ) {
 # runs.
 
 saveRDS(model.output, file=output.filename)
+cat('\nWrote ', output.filename, '\n')
+
