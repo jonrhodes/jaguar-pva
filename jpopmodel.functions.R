@@ -220,7 +220,7 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
 			# Note: rle: Run Length Encoding to compute the lengths and values of runs of equal values
 			#            in a vector
 			rle.cts <- rle(sort(dest.jcus.surviving))
-			
+      
 			receive.cts[rle.cts$values] <-  receive.cts[rle.cts$values] + rle.cts$lengths
 
             
@@ -232,6 +232,7 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
 
 	}
 
+      
 
         # -------------------------------------------------------------
         # Of the individuals arriving in each JCU, work out how many can
@@ -239,6 +240,7 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
         # capacity), and how many become floaters (assocuated with the
         # patch but not having a terriotiry)
         # -------------------------------------------------------------
+
 
     # for each JCU, determine how many (if any) home ranges are left to fill
     # # before reaching K
