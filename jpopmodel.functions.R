@@ -269,44 +269,74 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
 	return (pop)
 }
 
-get.parameters <- function(Elicitation,JCUs,Distances,Reps)
-{
+#---------------------------------------------------------------
+
+# Function to sample model input params to provide multiple realizatons from each expert
+
+get.parameters <- function(Elicitation, JCUs, Distances, reps) {
 	#generate ensemble
-	Ensemble <- expand.grid(1:Reps,1:5)
+	Ensemble <- expand.grid(1:reps,1:5)
 	Ensemble <- cbind(1:nrow(Ensemble),Ensemble)
 	names(Ensemble) <- c("ID","REP","EXPERT")
 
 	#simulate values for non-JCU specific parameters
 
 	#BIRTH RATE
-	BirthRate <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="BIRTH_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="BIRTH_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="BIRTH_BEST",X["EXPERT"] + 1])},Ensemble=Ensemble)
+	BirthRate <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="BIRTH_LOW",X["EXPERT"] + 1],
+        b=Elicitation[Elicitation[,"PARAM"]=="BIRTH_HIGH",X["EXPERT"] + 1],
+        c=Elicitation[Elicitation[,"PARAM"]=="BIRTH_BEST",X["EXPERT"] + 1])},
+    Ensemble=Ensemble)
 
 	#LITTER SIZE
-	Litter <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="LITTER_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="LITTER_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="LITTER_BEST",X["EXPERT"] + 1])},Ensemble=Ensemble)
+	Litter <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){
+        rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="LITTER_LOW",X["EXPERT"] + 1],
+            b=Elicitation[Elicitation[,"PARAM"]=="LITTER_HIGH",X["EXPERT"] + 1],
+            c=Elicitation[Elicitation[,"PARAM"]=="LITTER_BEST",X["EXPERT"] + 1])},
+        Ensemble=Ensemble)
 
 	#DISPERSAL MORTALITY
-	DispM <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="DISPM_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="DISPM_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="DISPM_BEST",X["EXPERT"] + 1])},Ensemble=Ensemble)
+	DispM <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){
+        rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="DISPM_LOW",X["EXPERT"] + 1],
+            b=Elicitation[Elicitation[,"PARAM"]=="DISPM_HIGH",X["EXPERT"] + 1],
+            c=Elicitation[Elicitation[,"PARAM"]=="DISPM_BEST",X["EXPERT"] + 1])},
+        Ensemble=Ensemble)
 
 	#MEAN DISPERSAL DISTANCE
-	MeanD <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MEAND_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MEAND_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MEAND_BEST",X["EXPERT"] + 1])},Ensemble=Ensemble)
+	MeanD <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MEAND_LOW",X["EXPERT"] + 1],
+        b=Elicitation[Elicitation[,"PARAM"]=="MEAND_HIGH",X["EXPERT"] + 1],
+        c=Elicitation[Elicitation[,"PARAM"]=="MEAND_BEST",X["EXPERT"] + 1])},
+    Ensemble=Ensemble)
 
 	#MAXIMUM DISPERSAL DISTANCE
-	MaxD <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MAXD_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MAXD_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MAXD_BEST",X["EXPERT"] + 1])},Ensemble=Ensemble)
+	MaxD <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MAXD_LOW",X["EXPERT"] + 1],
+        b=Elicitation[Elicitation[,"PARAM"]=="MAXD_HIGH",X["EXPERT"] + 1],
+        c=Elicitation[Elicitation[,"PARAM"]=="MAXD_BEST",X["EXPERT"] + 1])},
+    Ensemble=Ensemble)
 
 	#create non-JCU specific
-	JCUInd_Params <- as.data.frame(cbind(BirthRate,Litter,DispM,MeanD,MaxD))
+	JCUInd_Params <- as.data.frame(cbind(BirthRate, Litter, DispM, MeanD, MaxD))
 	names(JCUInd_Params) <- c("BirthR","LitS","DispM","MeanD","MaxD")
 
 	#simulate values for JCU specific parameters
 
 	#CARRYING CAPACITY
-	K <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble,JCUs){Size <- JCUs[,"Km2"];HR <- rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="HR_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="HR_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="HR_BEST",X["EXPERT"] + 1]) ;return((Size*100)/HR)},Ensemble=Ensemble,JCUs=JCUs)
+	K <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble,JCUs){
+        Size <- JCUs[,"Km2"];
+        HR <- rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="HR_LOW",X["EXPERT"] + 1],
+            b=Elicitation[Elicitation[,"PARAM"]=="HR_HIGH",X["EXPERT"] + 1],
+            c=Elicitation[Elicitation[,"PARAM"]=="HR_BEST",X["EXPERT"] + 1]);
+        return((Size*100)/HR)},
+        Ensemble=Ensemble,JCUs=JCUs)
 
 	#MORTALITY YOUNG
-	MORTY <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble,JCUs){Hunting <- JCUs[,"HunPress"];Mort <- ifelse(Hunting==1,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTY1_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTY1_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTY1_BEST",X["EXPERT"] + 1]),ifelse(Hunting==2,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTY2_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTY2_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTY2_BEST",X["EXPERT"] + 1]),rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTY3_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTY3_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTY3_BEST",X["EXPERT"] + 1])));return(Mort)},Ensemble=Ensemble,JCUs=JCUs)
+	MORTY <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble,JCUs){
+        Hunting <- JCUs[,"HunPress"];
+        Mort <- ifelse(Hunting==1,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTY1_LOW",X["EXPERT"] + 1],
+            b=Elicitation[Elicitation[,"PARAM"]=="MORTY1_HIGH",X["EXPERT"] + 1],
+            c=Elicitation[Elicitation[,"PARAM"]=="MORTY1_BEST",X["EXPERT"] + 1]),ifelse(Hunting==2,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTY2_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTY2_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTY2_BEST",X["EXPERT"] + 1]),rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTY3_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTY3_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTY3_BEST",X["EXPERT"] + 1])));return(Mort)},Ensemble=Ensemble,JCUs=JCUs)
 
 	#MORTALITY ADOLESCENT
-	MORTA <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble,JCUs){Hunting <- JCUs[,"HunPress"];Mort <- ifelse(Hunting==1,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTA1_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTA1_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTA1_BEST",X["EXPERT"] + 1]),ifelse(Hunting==2,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTA2_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTA2_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTA2_BEST",X["EXPERT"] + 1]),rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTA3_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTA3_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTA3_BEST",X["EXPERT"] + 1])));return(Mort)},Ensemble=Ensemble,JCUs=JCUs)
+	MORTA <- apply(X=Ensemble, MARGIN=1, FUN=function(X,Ensemble,JCUs){Hunting <- JCUs[,"HunPress"];Mort <- ifelse(Hunting==1,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTA1_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTA1_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTA1_BEST",X["EXPERT"] + 1]),ifelse(Hunting==2,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTA2_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTA2_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTA2_BEST",X["EXPERT"] + 1]),rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTA3_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTA3_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTA3_BEST",X["EXPERT"] + 1])));return(Mort)},Ensemble=Ensemble,JCUs=JCUs)
 
 	#MORTALITY BREEDING AGE (ADULTS)
 	MORTB <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble,JCUs){Hunting <- JCUs[,"HunPress"];Mort <- ifelse(Hunting==1,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTB1_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTB1_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTB1_BEST",X["EXPERT"] + 1]),ifelse(Hunting==2,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTB2_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTB2_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTB2_BEST",X["EXPERT"] + 1]),rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTB3_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTB3_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTB3_BEST",X["EXPERT"] + 1])));return(Mort)},Ensemble=Ensemble,JCUs=JCUs)
@@ -314,7 +344,8 @@ get.parameters <- function(Elicitation,JCUs,Distances,Reps)
 	#INITIAL ADULT POPULATION SIZE
 	START_POP <- JCUs[,"StartPop"]
 
-	Output <- list(Ensemble,JCUInd_Params,K,MORTY,MORTA,MORTB,START_POP)
+	Output <- list(Ensemble, JCUInd_Params, K, MORTY, MORTA, MORTB, START_POP)
+
 	names(Output) <- c("ENSEMBLE.LIST","FIXED.PARAMS","K","MORT.STAGE1","MORT.STAGE2","MORT.STAGE3","INITIAL.POP.STAGE3")
 
 	return(Output)
