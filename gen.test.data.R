@@ -37,6 +37,6 @@ initial.population['floaters',] <- 0
 
 # Make a dispersal matrxi between each of the JCUs
 disp.mort.matrix <- matrix(ncol=sim.num.JCUs, nrow=sim.num.JCUs)
-disp.mort.matrix[] <- round(runif(min=0.2, max=0.6, sim.num.JCUs^2),2)  # set all values to be the same for now
+disp.mort.matrix[] <- round(runif(min=0.2, max=0.6, sim.num.JCUs^2),3)  # set all values to be the same for now
 diag(disp.mort.matrix) <- 0  # set the diagonal values to zero.
 

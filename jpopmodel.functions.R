@@ -153,6 +153,9 @@ apply.dispersal <- function( pop, jcu.cc, disp.mort.mat ) {
 	dispersal.ctr <- 0
 	dispersal.mort.ctr <- 0
 
+    # vector to hold the total number arricing at each patch after all
+    # dispersal is done
+    receive.cts <- rep(0, length(jcu.vec))
 	for( source.jcu in jcu.vec ){
 
         # print out current JCU
@@ -161,9 +164,9 @@ apply.dispersal <- function( pop, jcu.cc, disp.mort.mat ) {
             'no over cc=', max(pop[3,i] - jcu.cc[i],0) , '\n')
 
 
-        # ------------------------------------------------------------
+        #------------------------------------------------------------
         # Do floater dispersal into attached JCU
-        # ------------------------------------------------------------
+        #------------------------------------------------------------
 
         # first check if there any floaters associated with the JCU and if any
         # territories have become available (i.e. due to mortality the
@@ -217,43 +220,48 @@ apply.dispersal <- function( pop, jcu.cc, disp.mort.mat ) {
 			# Note: rle: Run Length Encoding to compute the lengths and values of runs of equal values
 			#            in a vector
 			rle.cts <- rle(sort(dest.jcus.surviving))
-			receive.cts <- rep(0, length(jcu.vec))
-			receive.cts[rle.cts$values] <-  rle.cts$lengths
+      
+			receive.cts[rle.cts$values] <-  receive.cts[rle.cts$values] + rle.cts$lengths
 
-            # -------------------------------------------------------------
-            # Of the individuals arriving in a patch, work out how many can
-            # have territories (ie if the patch is not yet at it's carrying
-            # capacity), and how many become floaters (assocuated with the
-            # patch but not having a terriotiry)
-            # -------------------------------------------------------------
-
-            # for each JCU, determine how many (if any) home ranges are left to fill
-            # before reaching K
-            number.of.home.ranges.left <-  jcu.cc - pop['stage3',]
-            number.of.home.ranges.left[number.of.home.ranges.left<=0] <- 0
-
-            # determine how mant of the arriving individuals become floaters
-            receive.cts.floaters <- receive.cts - number.of.home.ranges.left
-            receive.cts.floaters[receive.cts.floaters<0] <- 0
-
-            # determine how many arriving individuals get territories (the
-            # remainder that don't become floaters)
-            receive.cts.stage3 <- receive.cts - receive.cts.floaters
-
-			# update the population
-            #pop[3,] <- pop['stage3',] + receive.cts
-            pop['stage3',] <- pop['stage3',] + receive.cts.stage3
-			pop['floaters',] <- pop['floaters',] + receive.cts.floaters
-
-			# track some dispersal stats
-			dispersal.ctr <- dispersal.ctr + total.to.disperse
-			dispersal.mort.ctr <- dispersal.mort.ctr + num.die.dispersing
-
-
-		}
-
+            
+            
+			
+		} else {
+            num.die.dispersing <- 0
+    }
 
 	}
+
+      
+
+        # -------------------------------------------------------------
+        # Of the individuals arriving in each JCU, work out how many can
+        # have territories (ie if the JCU is not yet at it's carrying
+        # capacity), and how many become floaters (assocuated with the
+        # patch but not having a terriotiry)
+        # -------------------------------------------------------------
+
+
+    # for each JCU, determine how many (if any) home ranges are left to fill
+    # # before reaching K
+    number.of.home.ranges.left <-  jcu.cc - pop['stage3',]
+    number.of.home.ranges.left[number.of.home.ranges.left<=0] <- 0
+
+    # determine how many of the arriving individuals become floaters
+    receive.cts.floaters <- receive.cts - number.of.home.ranges.left
+    receive.cts.floaters[receive.cts.floaters<0] <- 0 
+
+    # determine how many arriving individuals get territories (the
+    # remainder that don't become floaters)
+    receive.cts.stage3 <- receive.cts - receive.cts.floaters
+    
+    # update the population
+    pop['stage3',] <- pop['stage3',] + receive.cts.stage3
+    pop['floaters',] <- pop['floaters',] + receive.cts.floaters
+
+    # track some dispersal stats
+    dispersal.ctr <- dispersal.ctr + total.to.disperse
+    dispersal.mort.ctr <- dispersal.mort.ctr + num.die.dispersing
 
 
 	if(DEBUG.LEVEL>0) cat(' (Num disp:', dispersal.ctr, 'mort in disp:', dispersal.mort.ctr, ')')
