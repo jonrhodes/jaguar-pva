@@ -7,8 +7,8 @@ rm(list=ls(all=TRUE))
 
 
 # read in the results to analyse 
-#results.file <- 'jpopmodel_data_disp.Rdata'
-results.file <- 'jpopmodel_test.Rdata'
+results.file <- 'jpopmodel_data_disp.Rdata'
+#results.file <- 'jpopmodel_test.Rdata'
 model.output.all.experts <- readRDS ( results.file )
 
 
@@ -20,21 +20,25 @@ model.output.all.experts <- readRDS ( results.file )
 
 
 expert.vec <- unique(model.output.all.experts$expert.ID)
+expert.realization.vec <- unique(model.output.all.experts$expert.realization)
 
 cat('Ploting resuts for expert for', length(expert.vec), 'experts\n' )
 
 
-for(expert.id in expert.vec) {
+for(current.expert in expert.vec) {
 
-    cat('\nPloting results only for expert ID', expert.id)
+    cat('\nPloting results only for expert ID', current.expert)
+
     # pull out the result for the given expert
-    model.output <- subset( model.output.all.experts, expert.ID==expert.id)
+    model.output <- subset( model.output.all.experts, expert.ID==current.expert)
 
+    
 
     # Get vales from the dataframe
     num.reps <- max(model.output$stoch.realization)
     time.steps.vec <- unique(model.output$time)
     max.time <- max(time.steps.vec)
+    jcu.vec <- unique(model.output$jcu)
 
 
 
@@ -48,38 +52,37 @@ for(expert.id in expert.vec) {
     # Make a matrix to hold the data
     pop.traj <- matrix(ncol=length(time.steps.vec), nrow=num.reps)
 
-    # Made a matrix to hold the data for the first 3 JCUs
-    pop.traj.jcu1 <- matrix(ncol=length(time.steps.vec), nrow=num.reps) 
-    pop.traj.jcu2 <- matrix(ncol=length(time.steps.vec), nrow=num.reps) 
-    pop.traj.jcu3 <- matrix(ncol=length(time.steps.vec), nrow=num.reps) 
+
+    # Made an array to hold the data for all JCUs
+    pop.traj.jcu.array <- array(dim=c(length(time.steps.vec), nrow=num.reps, length(jcu.vec) ) )
 
     # Below is extracting the data for each JCU, could do the same for each
     # life stage also
 
     cat( '\nExtracting data for ecach JCU...')
+
     # Extract out the data to plot
     for(i in 1:num.reps ) {
+        
         if(i%%10==0) cat( '\n Rep = ', i) # print every 10th rep 
-        for( x in time.steps.vec ){
-            tmp <- subset( model.output, stoch.realization==i & time==x, select=stage1:stage3 )      
-            pop.traj[i, x ] <- sum(tmp)
 
-            tmp1 <- subset( model.output, stoch.realization==i & time==x & jcu==1, select=stage1:stage3 )      
-            pop.traj.jcu1[i, x ] <- sum(tmp1)
-            
-            tmp2 <- subset( model.output, stoch.realization==i & time==x & jcu==2, select=stage1:stage3 )      
-            pop.traj.jcu2[i, x ] <- sum(tmp2)
-            
-            tmp3 <- subset( model.output, stoch.realization==i & time==x & jcu==3, select=stage1:stage3 )      
-            pop.traj.jcu3[i, x ] <- sum(tmp3)
+        for( x in time.steps.vec ){
+
+            pop.traj[i, x] <- sum( subset( model.output, stoch.realization==i & time==x, select=total.pop ) )
+
+            # Pull out the results for each JCU
+            for( cur.jcu in jcu.vec ) {
+
+                pop.traj.jcu.array[x,i,cur.jcu] <- sum( subset( model.output, stoch.realization==i & time==x & jcu==cur.jcu, select=total.pop ) )
+
+            }
 
         }
     }
 
-
     cat('\nGenerating plots')
 
-    par(mfrow=c(2,2))
+    par(mfrow=c(3,3))
 
     tot.cc <- sum(subset( model.output, stoch.realization==1 & time==1, select=K ))
 
@@ -88,7 +91,7 @@ for(expert.id in expert.vec) {
     main.txt <- paste('Tot pop (MEP=', mean.traj[max.time],')', sep='')
     matplot(t(pop.traj), type='l', main=main.txt, xlab='time', ylab='pop size',
         ylim=c(0, max(tot.cc, pop.traj)) )
-    plot.title <- paste0(results.file, ' (expert ', expert.id, ')')
+    plot.title <- paste0(results.file, ' (expert ', current.expert, ')')
     mtext(plot.title, outer=TRUE, line=-1.5)
 
     # plot the mean trajectory
@@ -100,31 +103,29 @@ for(expert.id in expert.vec) {
     # The abline call justs plots the carrying capacity for the jcu (just the
     # initial value for now)
 
-    # plot jcu 1
-    mean.traj <- apply(pop.traj.jcu1,2,mean)
-    #main.txt <- paste('JCU1 (MEP=', mean.traj[max.time],')', sep='')
-    main.txt <- paste('JCU1 Low hunting pressure') 
-    matplot(t(pop.traj.jcu1), type='l', main=main.txt, xlab='time', ylab='pop size' )
-    lines(mean.traj, lwd=3)
-    #abline( h=subset( model.output, jcu==1 & stoch.realization==1 & time==1, select=cc ), col='grey' )
+    # jcus.to.plot <- jcu.vec
+    jcus.to.plot <- 5:17
+    jcus.to.plot <- c(5,9,14,15)
 
-    # plot jcu 2
-    mean.traj <- apply(pop.traj.jcu2,2,mean)
-    #main.txt <- paste('JCU2 (MEP=', mean.traj[max.time],')', sep='')
-    main.txt <- paste('JCU2 Medium hunting pressure')
-    matplot(t(pop.traj.jcu2), type='l', main=main.txt, xlab='time', ylab='pop size')
-    lines(mean.traj, lwd=3)
-    #abline( h=subset( model.output, jcu==2 & stoch.realization==1 & time==1, select=cc ), col='grey' )
+    for(cur.jcu in jcus.to.plot ) {
 
-    # plot jcu 3
-    mean.traj <- apply(pop.traj.jcu3,2,mean)
-    #main.txt <- paste('JCU3 (MEP=', mean.traj[max.time],')', sep='')
-    main.txt <- paste('JCU3 High hunting pressure')
-    matplot(t(pop.traj.jcu3), type='l', main=main.txt, xlab='time', ylab='pop size')
-    lines(mean.traj, lwd=3)
-    #abline( h=subset( model.output, jcu==3 & stoch.realization==1 & time==1, select=cc ), col='grey' )
+        # plot jcu 1
+        mean.traj <- apply(pop.traj.jcu.array[,,cur.jcu],1,mean)
+
+        #main.txt <- paste('JCU1 (MEP=', mean.traj[max.time],')', sep='')
+        main.txt <- paste0('JCU ', cur.jcu) 
+        matplot(pop.traj.jcu.array[,,cur.jcu], type='l', main=main.txt, xlab='time', ylab='pop size' )
+        lines(mean.traj, lwd=3)
+        #abline( h=subset( model.output, jcu==1 & stoch.realization==1 & time==1, select=cc ), col='grey' )
+        
+
+    }
 
     cat('\n')
-    par(mfrow=c(1,1))
+    
+
+    
 
 }
+
+par(mfrow=c(1,1))
