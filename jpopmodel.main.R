@@ -46,7 +46,7 @@ run.jpop.model <-function(expert.ID, expert.realization, num.stoch.realizatons, 
         time<-1
         for( jcu in 1:num.jcus){
 
-            init.info <- c(expert.ID, expert.realization, rep, time, jcu, jcu.att[jcu,"K"], jcu.att[jcu,"mortality.stage3"],
+          init.info <- c(expert.ID, expert.realization, rep, time, jcu, jcu.att[jcu,"K"], jcu.att[jcu,"mortality.stage3"],
                       jcu.att[jcu,"birth.rate.mean"], initial.pop[,jcu], sum(initial.pop[,jcu]) )
 
             # If first data entry, replace the first line
@@ -75,6 +75,7 @@ run.jpop.model <-function(expert.ID, expert.realization, num.stoch.realizatons, 
             #current.pop <- reproduce(current.pop, jcu.att$birth.rate.mean, litter.size.dist) # AG
             current.pop <- reproduce(current.pop, jcu.att$birth.rate.mean)
 
+
             # loop through each JCU and apply the JCU specific mortality to each life stage
             for( jcu in 1:num.jcus){
                 #browser()
@@ -99,7 +100,8 @@ run.jpop.model <-function(expert.ID, expert.realization, num.stoch.realizatons, 
             for( jcu in 1:num.jcus){
                 # Build a vector for the current info of the system
                 current.info <- c(expert.ID, expert.realization, rep, time, jcu, jcu.att[jcu,"K"], jcu.att[jcu,"mortality.stage3"],
-                                   jcu.att[jcu,"birth.rate.mean"], current.pop[,jcu], sum(current.pop[,jcu]) )
+
+                                  jcu.att[jcu,"birth.rate.mean"], current.pop[,jcu], sum(current.pop[,jcu]) )
 
                 # Add the the all outouts dataframe
                 all.outputs <- rbind( all.outputs, current.info )
@@ -141,5 +143,6 @@ run.jpop.model <-function(expert.ID, expert.realization, num.stoch.realizatons, 
 
     #save(all.outputs, file=output.filename)
     #browser()
+
     return (all.outputs)
 }

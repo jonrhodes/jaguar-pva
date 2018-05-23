@@ -50,9 +50,9 @@ age.population <- function( cur.pop, num.stages) {
 
 #---------------------------------------------------------------
 
+
 #reproduce <- function( cur.pop, birth.rate, litter.size.dist ) { # AG
 reproduce <- function( cur.pop, birth.rate ) {
-
 
     s1 <- cur.pop[1,]
     s3 <- cur.pop[3,]
@@ -216,7 +216,7 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
 			survival.vec <- rbinom(n=total.to.disperse, size=1, prob=(1-disp.mort.mat[source.jcu, dest.jcus]) )
 			dest.jcus.surviving <- dest.jcus[which(survival.vec==1)]
 			num.die.dispersing <- length(which(survival.vec==0))
-            
+
 			# determine the total number going to each jcu
 			# Note: rle: Run Length Encoding to compute the lengths and values of runs of equal values
 			#            in a vector
@@ -230,7 +230,6 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
 		} else {
             num.die.dispersing <- 0
         }
-
 	}
 
       
@@ -264,8 +263,7 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
     dispersal.ctr <- dispersal.ctr + total.to.disperse
     dispersal.mort.ctr <- dispersal.mort.ctr + num.die.dispersing
 
-
-    if(DEBUG.LEVEL>0) cat(' (Num disp:', dispersal.ctr, 'mort in disp:', dispersal.mort.ctr, ')')
+  if(DEBUG.LEVEL>0) cat(' (Num disp:', dispersal.ctr, 'mort in disp:', dispersal.mort.ctr, ')')
 	if(DEBUG.LEVEL>0 & (dispersal.ctr > dispersal.mort.ctr) ) cat('**********')
 
 	return (pop)
@@ -440,13 +438,13 @@ run.pop.model.apply <- function(Ensemble, Params.List, Years, Reps) {
 
 	#populate matrix
 	#get K
-    K.vals <- round(Params.List$K[Ensemble[1],],0)
-    K.vals[which(K.vals==0)] <- 1
+  K.vals <- round(Params.List$K[Ensemble[1],],0)
+  K.vals[which(K.vals==0)] <- 1
 
-    # jcu.attributes[,"K"] <- Params.List$K[Ensemble[1],]
+  # jcu.attributes[,"K"] <- Params.List$K[Ensemble[1],]
 	jcu.attributes[,"K"] <- K.vals
 
-	#mortality
+  #mortality
 	jcu.attributes[,"mortality.stage1"] <- Params.List$MORT.STAGE1[Ensemble[1],]
 	jcu.attributes[,"mortality.stage2"] <- Params.List$MORT.STAGE2[Ensemble[1],]
 	jcu.attributes[,"mortality.stage3"] <- Params.List$MORT.STAGE3[Ensemble[1],]
@@ -472,9 +470,10 @@ run.pop.model.apply <- function(Ensemble, Params.List, Years, Reps) {
 	#account for maximum dispersal distance - set mortality to 1 if greater than maximum dispersal
 	disp.mort.matrix <- ifelse(Params.List$DISTANCES > Params.List$FIXED.PARAMS[Ensemble[1],"MaxD"],1,disp.mort.matrix)
 
-    #browser()
+  #browser()
 
-    cat( '\n Expert:', expert.ID, '\tExpert input realization:', expert.realization )
+  cat( '\n Expert:', expert.ID, '\tExpert input realization:', expert.realization )
+
 	#run population model
 	run.jpop.model(expert.ID = expert.ID, expert.realization = expert.realization, num.stoch.realizatons = Reps, initial.pop = initial.population, jcu.att = jcu.attributes, disp.mort.mat = disp.mort.matrix, num.time.steps = Years)
 

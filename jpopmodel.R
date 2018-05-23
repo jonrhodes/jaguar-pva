@@ -24,6 +24,7 @@ source('jpopmodel.main.R')
 time.steps <- 30
 stochastic.realizations <- 10
 expert.realizations <- 3
+
 output.filename <- 'jpopmodel_data_disp.Rdata'
 
 #elicited parameters
@@ -33,7 +34,6 @@ JCUData <- read.csv('input_data/jcu_hunting_start_pop.csv')
 
 #get random parameter values based on elicited values
 Params <- get.parameters(Elicitation = ParamElic,JCUs = JCUData,Distances = Distances,Reps = expert.realizations)
-
 
 par(mfrow=c(2,3))
 #run population model
@@ -52,6 +52,7 @@ source('gen.test.data.R')
 
 # create initial output data for fist run
 cat('\nExpert 1')
+
 # model.output <- run.jpop.model(expert.ID=1, expert.realization, stochastic.realizations, initial.population, jcu.attributes, disp.mort.matrix, time.steps)
 
 # dummy loop through experts
@@ -62,6 +63,7 @@ for( expert in 2:3 ) {
 
   #append the run the current outputs 
   # model.output <- rbind( model.output, x)
+
 
 }
 
