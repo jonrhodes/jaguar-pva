@@ -22,8 +22,8 @@ source('jpopmodel.main.R')
         # ------------------------------------------------
 
 time.steps <- 30
-stochastic.realizations <- 5
-expert.realizations <- 1
+stochastic.realizations <- 10
+expert.realizations <- 3
 output.filename <- 'jpopmodel_data_disp.Rdata'
 
 #elicited parameters

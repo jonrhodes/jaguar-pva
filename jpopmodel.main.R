@@ -127,7 +127,7 @@ run.jpop.model <-function(expert.ID, expert.realization, num.stoch.realizatons, 
     # Plot the total pop trajectory of each realisation and also the mean
     # trajectory (using matplot() to automatically plot a curve for each
     # realization)
-    plot.title <- paste0('Total population\n(expert ', expert.ID, ')' )
+    plot.title <- paste0('Total population\n(Expert ', expert.ID, '; R', expert.realization, ')' )
     matplot ( t(total.pop), type = 'l', main= plot.title, xlab='time', ylab='pop size',
              #ylim=c(0, 120)
              ylim=c(0, max(total.pop))

@@ -474,7 +474,7 @@ run.pop.model.apply <- function(Ensemble, Params.List, Years, Reps) {
 
     #browser()
 
-    cat( '\n expert', expert.ID )
+    cat( '\n Expert:', expert.ID, '\tExpert input realization:', expert.realization )
 	#run population model
 	run.jpop.model(expert.ID = expert.ID, expert.realization = expert.realization, num.stoch.realizatons = Reps, initial.pop = initial.population, jcu.att = jcu.attributes, disp.mort.mat = disp.mort.matrix, num.time.steps = Years)
 
