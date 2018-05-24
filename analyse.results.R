@@ -7,8 +7,8 @@ rm(list=ls(all=TRUE))
 
 
 # read in the results to analyse 
-results.file <- 'jpopmodel_data_disp.Rdata'
-#results.file <- 'jpopmodel_test.Rdata'
+# results.file <- 'jpopmodel_data_disp.Rdata'
+results.file <- 'jpopmodel_data_disp_50-reps.Rdata'
 model.output.all.experts <- readRDS ( results.file )
 
 
@@ -24,6 +24,7 @@ expert.realization.vec <- unique(model.output.all.experts$expert.realization)
 
 cat('Ploting resuts for expert for', length(expert.vec), 'experts\n' )
 
+#pdf( 'jpop_50-reps.pdf' )
 
 for(current.expert in expert.vec) {
 
@@ -37,6 +38,7 @@ for(current.expert in expert.vec) {
 
         # Get vales from the dataframe
         num.reps <- max(model.output$stoch.realization)
+        #num.reps <- 20
         time.steps.vec <- unique(model.output$time)
         max.time <- max(time.steps.vec)
         jcu.vec <- unique(model.output$jcu)
@@ -91,8 +93,11 @@ for(current.expert in expert.vec) {
         # Use matplot to plot a curve for each realization 
         mean.traj <- apply(pop.traj,2,mean)
         main.txt <- paste('Tot pop (MEP=', mean.traj[max.time],')', sep='')
+
+        #if( mean.traj[max(time.steps.vec)] < mean.traj[1] ) y.lim<-max(pop.traj)
+
         matplot(t(pop.traj), type='l', main=main.txt, xlab='time', ylab='pop size',
-            ylim=c(0, max(tot.cc, pop.traj)) )
+            ylim=c(0, max(pop.traj) ) ) #max(tot.cc, pop.traj)) )
         plot.title <- paste0(results.file, ' (expert ', current.expert, '; R', current.expert.realization, ')')
         mtext(plot.title, outer=TRUE, line=-1.5)
 
@@ -102,26 +107,27 @@ for(current.expert in expert.vec) {
         # add a line for the total carrying capacity
         #abline(h=tot.cc, col='grey')
 
-        # The abline call justs plots the carrying capacity for the jcu (just the
-        # initial value for now)
+                # ------------------------------------------------
+                # Make plots for each JCU
+                # ------------------------------------------------
+
 
         # jcus.to.plot <- jcu.vec
         jcus.to.plot <- 5:17
-        jcus.to.plot <- c(5,9,14,15)
+        jcus.to.plot <- c(1,5,9,13,14,15,16,17)
 
         for(cur.jcu in jcus.to.plot ) {
 
-            # plot jcu 1
+            # plot the trajectory for each J
             mean.traj <- apply(pop.traj.jcu.array[,,cur.jcu],1,mean)
-
-            #main.txt <- paste('JCU1 (MEP=', mean.traj[max.time],')', sep='')
-            main.txt <- paste0('JCU ', cur.jcu) 
+            main.txt <- paste0('JCU ', cur.jcu, ' (MEP=', mean.traj[max.time],')' ) 
             matplot(pop.traj.jcu.array[,,cur.jcu], type='l', main=main.txt, xlab='time', ylab='pop size' )
             lines(mean.traj, lwd=3)
-            #abline( h=subset( model.output, jcu==1 & stoch.realization==1 & time==1, select=cc ), col='grey' )
+            # abline( h=subset( model.output, jcu==cur.jcu & stoch.realization==1 & time==1, select=K ), col='grey' )
             
-
         }
+
+        # browser()
 
         cat('\n')   
 
@@ -129,5 +135,7 @@ for(current.expert in expert.vec) {
 
 
 }
+#dev.off()
 
+cat('All done!\n')
 par(mfrow=c(1,1))

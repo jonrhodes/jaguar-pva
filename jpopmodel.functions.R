@@ -64,23 +64,23 @@ reproduce <- function(cur.pop, birth.rate, litter.size) {
     	num.that.reproduce <- rbinom(n=1, size=s3[i], prob=birth.rate[i])
 
     	# Now determine how many offspring each one has
-			# Here we assume that litter size has to be between 1 and 4
-			# and therefore we draw the litter size for an individual from a zero
-			# truncated binomial distribution with 4 trials with p set so it has
-			# a mean equal to the elicited litter size
-			# the mean of a zero truncated binomial is np(1 - (1 - p) ^ n)
-			# so with n = 4 we solve the for the root of 4p(1 - (1 - p) ^ 4) - L = 0
-			# where L is the elicited litter size. This needs to be solved numerically
+		# Here we assume that litter size has to be between 1 and 4
+		# and therefore we draw the litter size for an individual from a zero
+		# truncated binomial distribution with 4 trials with p set so it has
+		# a mean equal to the elicited litter size
+		# the mean of a zero truncated binomial is np(1 - (1 - p) ^ n)
+		# so with n = 4 we solve the for the root of 4p(1 - (1 - p) ^ 4) - L = 0
+		# where L is the elicited litter size. This needs to be solved numerically
 
-			f = function(p,L) {4 * p * (1 - (1 - p) ^ 4) - L}
-			Root <- uniroot(f, c(0,1), L = litter.size[i])
-			num.new.offspring <- sum(rztbinom(num.that.reproduce, 4, Root$root))
+		f = function(p,L) {4 * p * (1 - (1 - p) ^ 4) - L}
+		Root <- uniroot(f, c(0,1), L = litter.size[i])
+		num.new.offspring <- sum(rztbinom(num.that.reproduce, 4, Root$root))
 
-			#OLD CODE - PREPLACED BY JR (24/5/18)
+		#OLD CODE - PREPLACED BY JR (24/5/18)
     	#if( OPT.USE.TRUNCATED.POISSON.FOR.REPRODUCTION) {
     		# Use the truncated Poisson distribution (defined above). Note that
     		# pre.truncated.mean of 1.06 corresponds to truncated.mean of 1.62
-    		num.new.offspring <- sum(rtpois(num.that.reproduce, pre.truncated.mean=1.06))
+    		#num.new.offspring <- sum(rtpois(num.that.reproduce, pre.truncated.mean=1.06))
 
     	#} else {
     		# In this case assume that jaguar litter size is only 1 or 2
@@ -196,7 +196,7 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
 
         # calculate the number of adult individuals above carrying capacity, as they
         # are the ones we assume will disperse
-		    num.stage3.to.disperse <- max(pop['stage3',source.jcu] - jcu.cc[source.jcu], 0)
+		num.stage3.to.disperse <- max(pop['stage3',source.jcu] - jcu.cc[source.jcu], 0)
         num.floaters.to.disperse <- pop['floaters', source.jcu]
         total.to.disperse <- num.stage3.to.disperse + num.floaters.to.disperse
 
@@ -268,8 +268,14 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
     dispersal.ctr <- dispersal.ctr + total.to.disperse
     dispersal.mort.ctr <- dispersal.mort.ctr + num.die.dispersing
 
-  if(DEBUG.LEVEL>0) cat(' (Num disp:', dispersal.ctr, 'mort in disp:', dispersal.mort.ctr, ')')
-	if(DEBUG.LEVEL>0 & (dispersal.ctr > dispersal.mort.ctr) ) cat('**********')
+    if(DEBUG.LEVEL>0) cat(' (Num disp:', dispersal.ctr, 'mort in disp:', dispersal.mort.ctr, ')')
+    if(DEBUG.LEVEL>0 & (dispersal.ctr > dispersal.mort.ctr) ) cat('**********')
+
+    if(dispersal.ctr > dispersal.mort.ctr ) {
+        cat('\n(Num disp:', dispersal.ctr, 'mort in disp:', dispersal.mort.ctr, ')')
+        cat('**********')
+
+    }
 
 	return (pop)
 }
@@ -324,7 +330,7 @@ get.parameters <- function(Elicitation,JCUs,Distances,Reps) {
 	#INITIAL ADULT POPULATION SIZE
 	START_POP <- JCUs[,"StartPop"]
 
-	Output <- list(Ensemble, JCUInd_Params, t(K), t(MORTY), t(MORTA), t(MORTB), START_POP,Distances)
+	Output <- list(Ensemble, JCUInd_Params, t(K), t(MORTY), t(MORTA), t(MORTB), START_POP, Distances)
 	names(Output) <- c("ENSEMBLE.LIST", "FIXED.PARAMS","K", "MORT.STAGE1", "MORT.STAGE2", "MORT.STAGE3", "INITIAL.POP.STAGE3","DISTANCES")
 
 	return(Output)
@@ -350,33 +356,33 @@ run.pop.model.apply <- function(Ensemble, Params.List, Years, Reps) {
 	colnames(initial.population) <- paste0( 'jcu', 1:ncol(Params.List$K)) # set column names
 	rownames(initial.population) <- c(paste0( 'stage', 1:3), 'floaters' ) # set the row names
 
-	#populate initial population size values
-	#note that for now we assume that these are all adults
+	# populate initial population size values
+	# note that for now we assume that these are all adults
 	initial.population[3,] <- Params.List$INITIAL.POP.STAGE3
 
 	#create carrying capacity, mortality, and birth rate parameters
 	jcu.attributes <- matrix(0, ncol = 7, nrow = ncol(Params.List$K))
 	colnames(jcu.attributes) <- c("K", "mortality.stage1", "mortality.stage2", "mortality.stage3", "mortality.floaters", "birth.rate","litter.size") # set column names
 
-	#populate matrix
-	#get K
-  K.vals <- round(Params.List$K[Ensemble[1],],0)
-  K.vals[which(K.vals==0)] <- 1
-
-  # jcu.attributes[,"K"] <- Params.List$K[Ensemble[1],]
+	# populate matrix
+	# get K and round it off so it's an integer. If K is less than 0.5 set it to 1.
+    K.vals <- round(Params.List$K[Ensemble[1],],0)
+    K.vals[which(K.vals==0)] <- 1
 	jcu.attributes[,"K"] <- K.vals
 
-  #mortality
+    # mortality
 	jcu.attributes[,"mortality.stage1"] <- Params.List$MORT.STAGE1[Ensemble[1],]
 	jcu.attributes[,"mortality.stage2"] <- Params.List$MORT.STAGE2[Ensemble[1],]
 	jcu.attributes[,"mortality.stage3"] <- Params.List$MORT.STAGE3[Ensemble[1],]
 	jcu.attributes[,"mortality.floaters"] <- Params.List$MORT.STAGE3[Ensemble[1],]
-	#birth rate
+
+	# birth rate
 	jcu.attributes[,"birth.rate"] <- Params.List$FIXED.PARAMS[Ensemble[1],"BirthR"]
-	#litter size
+
+	# litter size
 	jcu.attributes[,"litter.size"] <- Params.List$FIXED.PARAMS[Ensemble[1],"LitS"]
 
-	#create data frame
+	# create data frame
 	jcu.attributes <- as.data.frame(jcu.attributes)
 
 	#NOTE NEED TO DEAL WITH LITTER SIZE - NOT DEALT WITH THIS YET (JR - 20/5/18)
@@ -392,9 +398,7 @@ run.pop.model.apply <- function(Ensemble, Params.List, Years, Reps) {
 	#account for maximum dispersal distance - set mortality to 1 if greater than maximum dispersal
 	disp.mort.matrix <- ifelse(Params.List$DISTANCES > Params.List$FIXED.PARAMS[Ensemble[1],"MaxD"],1,disp.mort.matrix)
 
-  #browser()
-
-  cat( '\n Expert:', expert.ID, '\tExpert input realization:', expert.realization )
+    cat( '\n Expert:', expert.ID, '\tExpert input realization:', expert.realization )
 
 	#run population model
 	run.jpop.model(expert.ID = expert.ID, expert.realization = expert.realization, num.stoch.realizatons = Reps, initial.pop = initial.population, jcu.att = jcu.attributes, disp.mort.mat = disp.mort.matrix, num.time.steps = Years)

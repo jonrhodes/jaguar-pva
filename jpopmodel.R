@@ -22,8 +22,8 @@ source('jpopmodel.main.R')
         # Define parameters of the model
         # ------------------------------------------------
 
-time.steps <- 30
-stochastic.realizations <- 10
+time.steps <- 50
+stochastic.realizations <- 50
 expert.realizations <- 3
 
 output.filename <- 'jpopmodel_data_disp.Rdata'
