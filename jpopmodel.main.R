@@ -1,5 +1,4 @@
 
-
             # ------------------------------------------------
             # Low level options
             # ------------------------------------------------
@@ -24,18 +23,15 @@ run.jpop.model <-function(expert.ID, expert.realization, num.stoch.realizatons, 
             # ------------------------------------------------
 
     # A data.frame to store the full state of the system
-    all.outputs <- data.frame ( 'expert.ID'=NA, 'expert.realization'=NA, 'stoch.realization'=NA, 'time'=NA, 'jcu'=NA, 'K'=NA, 'mortality.stage3'=NA, 'birth.rate.mean'=NA,
+    all.outputs <- data.frame ( 'expert.ID'=NA, 'expert.realization'=NA, 'stoch.realization'=NA, 'time'=NA, 'jcu'=NA, 'K'=NA, 'mortality.stage3'=NA, 'birth.rate'=NA,
                                'stage1'=NA, 'stage2'=NA, 'stage3'=NA, 'floaters'=NA, 'total.pop'=NA) [numeric(0), ]
 
-    # A dataframx to just store the total population size to make a quick plot at the end
+    # A dataframe to just store the total population size to make a quick plot at the end
     total.pop <- matrix( ncol = num.time.steps, nrow = num.stoch.realizatons )
-
-
 
             # ------------------------------------------------
             # Run the model
             # ------------------------------------------------
-
 
     for( rep in 1:num.stoch.realizatons) {
 
@@ -47,7 +43,7 @@ run.jpop.model <-function(expert.ID, expert.realization, num.stoch.realizatons, 
         for( jcu in 1:num.jcus){
 
           init.info <- c(expert.ID, expert.realization, rep, time, jcu, jcu.att[jcu,"K"], jcu.att[jcu,"mortality.stage3"],
-                      jcu.att[jcu,"birth.rate.mean"], initial.pop[,jcu], sum(initial.pop[,jcu]) )
+                      jcu.att[jcu,"birth.rate"], initial.pop[,jcu], sum(initial.pop[,jcu]) )
 
             # If first data entry, replace the first line
             if( dim(all.outputs)[1] == 0 ) all.outputs[1,] <- init.info
@@ -71,10 +67,8 @@ run.jpop.model <-function(expert.ID, expert.realization, num.stoch.realizatons, 
             current.pop <- age.population(current.pop, OPT.NUMBER.OF.LIFE.STAGES)
 
             # do reproduction (assumes for now only last stage reproduces)
-            
-            #current.pop <- reproduce(current.pop, jcu.att$birth.rate.mean, litter.size.dist) # AG
-            current.pop <- reproduce(current.pop, jcu.att$birth.rate.mean)
 
+            current.pop <- reproduce(current.pop, jcu.att$birth.rate, jcu.att$litter.size)
 
             # loop through each JCU and apply the JCU specific mortality to each life stage
             for( jcu in 1:num.jcus){
@@ -101,30 +95,25 @@ run.jpop.model <-function(expert.ID, expert.realization, num.stoch.realizatons, 
                 # Build a vector for the current info of the system
                 current.info <- c(expert.ID, expert.realization, rep, time, jcu, jcu.att[jcu,"K"], jcu.att[jcu,"mortality.stage3"],
 
-                                  jcu.att[jcu,"birth.rate.mean"], current.pop[,jcu], sum(current.pop[,jcu]) )
+                                  jcu.att[jcu,"birth.rate"], current.pop[,jcu], sum(current.pop[,jcu]) )
 
-                # Add the the all outouts dataframe
+                # Add to the all outputs dataframe
                 all.outputs <- rbind( all.outputs, current.info )
             }
 
             #if(DEBUG){ show(current.pop) }
 
-
           if(DEBUG.LEVEL>1) cat("\n-----------------------------------------------\n")
         }
-
-
 
     }
 
     cat('\n')
 
-
             # ------------------------------------------------
             # Make some simple plots. For more detailed analysis run the
             # analyse.results.R script
             # ------------------------------------------------
-
 
     # Plot the total pop trajectory of each realisation and also the mean
     # trajectory (using matplot() to automatically plot a curve for each

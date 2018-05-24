@@ -9,6 +9,7 @@ rm(list=ls(all=TRUE))
 
 #load required libraries
 library(triangle)
+library(actuar)
 
 # set seed if want to be able to reproduce results
 set.seed(44)
@@ -40,10 +41,10 @@ par(mfrow=c(2,3))
 model.output <- apply(X = Params$ENSEMBLE.LIST, MARGIN = 1, FUN = run.pop.model.apply, Params.List = Params, Years = time.steps, Reps = stochastic.realizations)
 
 # convert the list of arrays that is an output from apply to a single array by binding them by row
-model.output <-  do.call(rbind, model.output )
+model.output <-  do.call(rbind, model.output)
 
 # generate some data for doing fast tests
-source('gen.test.data.R')
+#source('gen.test.data.R')
 
 
         # ------------------------------------------------
@@ -51,7 +52,7 @@ source('gen.test.data.R')
         # ------------------------------------------------
 
 # create initial output data for fist run
-cat('\nExpert 1')
+#cat('\nExpert 1')
 
 # model.output <- run.jpop.model(expert.ID=1, expert.realization, stochastic.realizations, initial.population, jcu.attributes, disp.mort.matrix, time.steps)
 
@@ -61,10 +62,8 @@ for( expert in 2:3 ) {
   #do a subsequent run to a append
   # x <- run.jpop.model(expert, expert.realization, stochastic.realizations, initial.population, jcu.attributes, disp.mort.matrix, time.steps  )
 
-  #append the run the current outputs 
+  #append the run the current outputs
   # model.output <- rbind( model.output, x)
-
-
 }
 
 
@@ -79,4 +78,3 @@ for( expert in 2:3 ) {
 
 saveRDS(model.output, file=output.filename)
 cat('\nWrote ', output.filename, '\n')
-

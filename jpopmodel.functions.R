@@ -6,7 +6,7 @@ rtpois <- function( num.of.samples, pre.truncated.mean ) {
 	# Function to sample from a truncated Poisson distribution (ie with
 	# excluding zero value). I got his code from the following refrence:
 	# http://tolstoy.newcastle.edu.au/R/help/05/05/3745.html  Note that given
-	# a pre-trucated mean of T, then the mean of the truncated distribution
+	# a pre-truncated mean of T, then the mean of the truncated distribution
 	# will be given by T/(1 - exp(-T)). For the litter size, the expert
 	# elicited values are for the mean of the trucated distibution (eg mean
 	# litter size of 1.62 means for those give birth, the mean number of
@@ -50,39 +50,48 @@ age.population <- function( cur.pop, num.stages) {
 
 #---------------------------------------------------------------
 
-
-#reproduce <- function( cur.pop, birth.rate, litter.size.dist ) { # AG
-reproduce <- function( cur.pop, birth.rate ) {
+reproduce <- function(cur.pop, birth.rate, litter.size) {
 
     s1 <- cur.pop[1,]
     s3 <- cur.pop[3,]
 
-    pop <- rep(0, length(s3) )
+    pop <- rep(0, length(s3))
 
     # Loop over JCUs and decide which give birth
-    for( i in 1:length(s3) ) {
-
+    for(i in 1:length(s3)) {
 
     	# First determine the number in stage 3 that reproduce
     	num.that.reproduce <- rbinom(n=1, size=s3[i], prob=birth.rate[i])
 
     	# Now determine how many offspring each one has
+			# Here we assume that litter size has to be between 1 and 4
+			# and therefore we draw the litter size for an individual from a zero
+			# truncated binomial distribution with 4 trials with p set so it has
+			# a mean equal to the elicited litter size
+			# the mean of a zero truncated binomial is np(1 - (1 - p) ^ n)
+			# so with n = 4 we solve the for the root of 4p(1 - (1 - p) ^ 4) - L = 0
+			# where L is the elicited litter size. This needs to be solved numerically
 
-    	if( OPT.USE.TRUNCATED.POISSON.FOR.REPRODUCTION) {
+			f = function(p,L) {4 * p * (1 - (1 - p) ^ 4) - L}
+			Root <- uniroot(f, c(0,1), L = litter.size[i])
+			num.new.offspring <- sum(rztbinom(num.that.reproduce, 4, Root$root))
+
+			#OLD CODE - PREPLACED BY JR (24/5/18)
+    	#if( OPT.USE.TRUNCATED.POISSON.FOR.REPRODUCTION) {
     		# Use the truncated Poisson distribution (defined above). Note that
     		# pre.truncated.mean of 1.06 corresponds to truncated.mean of 1.62
     		num.new.offspring <- sum(rtpois(num.that.reproduce, pre.truncated.mean=1.06))
 
-    	} else {
+    	#} else {
     		# In this case assume that jaguar litter size is only 1 or 2
     		# offspring. Set the probabilities of having 1 or 2 offspring such
     		# that expected litter size has a value of 1.62 (the mean expert
     		# estimate), which then generates 0.38 * 1 + (1-0.38)*2 = 1.62
-			litter.size.dist <- c(prob.litter.size.eq.1=0.38, prob.litter.size.eq.2=1-0.38)
+			#litter.size <- c(prob.litter.size.eq.1=0.38, prob.litter.size.eq.2=1-0.38)
 
-    		num.new.offspring <- sum(sample(c(1,2), size=num.that.reproduce, replace=TRUE, prob=litter.size.dist))
+    	#	num.new.offspring <- sum(sample(c(1,2), size=num.that.reproduce, replace=TRUE, prob=litter.size))
 
-    	}
+    	#}
     	#browser()
 
     	pop[i] <- s1[i] + num.new.offspring
@@ -154,7 +163,7 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
 	dispersal.ctr <- 0
 	dispersal.mort.ctr <- 0
 
-    # vector to hold the total number arricing at each patch after all
+    # vector to hold the total number arriving at each patch after all
     # dispersal is done
     receive.cts <- rep(0, length(jcu.vec))
 	for( source.jcu in jcu.vec ){
@@ -185,7 +194,7 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
         pop['floaters', source.jcu] <- pop['floaters', source.jcu] - num.floaters.moving.into.jcu
 
 
-        # calculate the number of adult individuals above carrying capactiy, as they
+        # calculate the number of adult individuals above carrying capacity, as they
         # are the ones we assume will disperse
 		    num.stage3.to.disperse <- max(pop['stage3',source.jcu] - jcu.cc[source.jcu], 0)
         num.floaters.to.disperse <- pop['floaters', source.jcu]
@@ -203,13 +212,15 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
             # Work out where they disperse to and how many die  on the way
             # ------------------------------------------------------------
 
-            # choose the jcus that each jaguar will try and disperse to;
+            # choose the JCUs that each jaguar will try and disperse to;
             # select each one randomly for now NOTE: here is where to change
             # things if we want to try something other than random choices of
             # where to disperse to
 
             # TODO: need to limit which JCUs they can reach based on
-            # assumption of max dispersal distance
+            # assumption of max dispersal distance - I THINK THIS IS DONE VIA DSIPERSAL
+						# MORTALITY - BUT MAYBE NEED TO LIMIT WHICH ONES THEY CAN DISPERSE TO
+						# WHICH WOULD SPEED UP THE SIMULATIONS (JR - 24/5/18)
 			dest.jcus <- sample(jcu.vec[-source.jcu], total.to.disperse, replace=TRUE )
 
 			# determine which ones survive the dispersal
@@ -221,18 +232,13 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
 			# Note: rle: Run Length Encoding to compute the lengths and values of runs of equal values
 			#            in a vector
 			rle.cts <- rle(sort(dest.jcus.surviving))
-      
+
 			receive.cts[rle.cts$values] <-  receive.cts[rle.cts$values] + rle.cts$lengths
 
-            
-            
-			
 		} else {
             num.die.dispersing <- 0
         }
 	}
-
-      
 
         # -------------------------------------------------------------
         # Of the individuals arriving in each JCU, work out how many can
@@ -241,7 +247,6 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
         # patch but not having a terriotiry)
         # -------------------------------------------------------------
 
-
     # for each JCU, determine how many (if any) home ranges are left to fill
     # # before reaching K
     number.of.home.ranges.left <-  jcu.cc - pop['stage3',]
@@ -249,12 +254,12 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
 
     # determine how many of the arriving individuals become floaters
     receive.cts.floaters <- receive.cts - number.of.home.ranges.left
-    receive.cts.floaters[receive.cts.floaters<0] <- 0 
+    receive.cts.floaters[receive.cts.floaters<0] <- 0
 
     # determine how many arriving individuals get territories (the
     # remainder that don't become floaters)
     receive.cts.stage3 <- receive.cts - receive.cts.floaters
-    
+
     # update the population
     pop['stage3',] <- pop['stage3',] + receive.cts.stage3
     pop['floaters',] <- pop['floaters',] + receive.cts.floaters
@@ -271,91 +276,8 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
 
 #---------------------------------------------------------------
 
-# Function to sample model input params to provide multiple realizatons from each expert
-
-get.parameters <- function(Elicitation, JCUs, Distances, reps) {
-	#generate ensemble
-	Ensemble <- expand.grid(1:reps,1:5)
-	Ensemble <- cbind(1:nrow(Ensemble),Ensemble)
-	names(Ensemble) <- c("ID","REP","EXPERT")
-
-	#simulate values for non-JCU specific parameters
-
-	#BIRTH RATE
-	BirthRate <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="BIRTH_LOW",X["EXPERT"] + 1],
-        b=Elicitation[Elicitation[,"PARAM"]=="BIRTH_HIGH",X["EXPERT"] + 1],
-        c=Elicitation[Elicitation[,"PARAM"]=="BIRTH_BEST",X["EXPERT"] + 1])},
-    Ensemble=Ensemble)
-
-	#LITTER SIZE
-	Litter <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){
-        rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="LITTER_LOW",X["EXPERT"] + 1],
-            b=Elicitation[Elicitation[,"PARAM"]=="LITTER_HIGH",X["EXPERT"] + 1],
-            c=Elicitation[Elicitation[,"PARAM"]=="LITTER_BEST",X["EXPERT"] + 1])},
-        Ensemble=Ensemble)
-
-	#DISPERSAL MORTALITY
-	DispM <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){
-        rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="DISPM_LOW",X["EXPERT"] + 1],
-            b=Elicitation[Elicitation[,"PARAM"]=="DISPM_HIGH",X["EXPERT"] + 1],
-            c=Elicitation[Elicitation[,"PARAM"]=="DISPM_BEST",X["EXPERT"] + 1])},
-        Ensemble=Ensemble)
-
-	#MEAN DISPERSAL DISTANCE
-	MeanD <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MEAND_LOW",X["EXPERT"] + 1],
-        b=Elicitation[Elicitation[,"PARAM"]=="MEAND_HIGH",X["EXPERT"] + 1],
-        c=Elicitation[Elicitation[,"PARAM"]=="MEAND_BEST",X["EXPERT"] + 1])},
-    Ensemble=Ensemble)
-
-	#MAXIMUM DISPERSAL DISTANCE
-	MaxD <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble){rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MAXD_LOW",X["EXPERT"] + 1],
-        b=Elicitation[Elicitation[,"PARAM"]=="MAXD_HIGH",X["EXPERT"] + 1],
-        c=Elicitation[Elicitation[,"PARAM"]=="MAXD_BEST",X["EXPERT"] + 1])},
-    Ensemble=Ensemble)
-
-	#create non-JCU specific
-	JCUInd_Params <- as.data.frame(cbind(BirthRate, Litter, DispM, MeanD, MaxD))
-	names(JCUInd_Params) <- c("BirthR","LitS","DispM","MeanD","MaxD")
-
-	#simulate values for JCU specific parameters
-
-	#CARRYING CAPACITY
-	K <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble,JCUs){
-        Size <- JCUs[,"Km2"];
-        HR <- rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="HR_LOW",X["EXPERT"] + 1],
-            b=Elicitation[Elicitation[,"PARAM"]=="HR_HIGH",X["EXPERT"] + 1],
-            c=Elicitation[Elicitation[,"PARAM"]=="HR_BEST",X["EXPERT"] + 1]);
-        return((Size*100)/HR)},
-        Ensemble=Ensemble,JCUs=JCUs)
-
-	#MORTALITY YOUNG
-	MORTY <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble,JCUs){
-        Hunting <- JCUs[,"HunPress"];
-        Mort <- ifelse(Hunting==1,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTY1_LOW",X["EXPERT"] + 1],
-            b=Elicitation[Elicitation[,"PARAM"]=="MORTY1_HIGH",X["EXPERT"] + 1],
-            c=Elicitation[Elicitation[,"PARAM"]=="MORTY1_BEST",X["EXPERT"] + 1]),ifelse(Hunting==2,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTY2_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTY2_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTY2_BEST",X["EXPERT"] + 1]),rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTY3_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTY3_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTY3_BEST",X["EXPERT"] + 1])));return(Mort)},Ensemble=Ensemble,JCUs=JCUs)
-
-	#MORTALITY ADOLESCENT
-	MORTA <- apply(X=Ensemble, MARGIN=1, FUN=function(X,Ensemble,JCUs){Hunting <- JCUs[,"HunPress"];Mort <- ifelse(Hunting==1,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTA1_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTA1_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTA1_BEST",X["EXPERT"] + 1]),ifelse(Hunting==2,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTA2_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTA2_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTA2_BEST",X["EXPERT"] + 1]),rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTA3_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTA3_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTA3_BEST",X["EXPERT"] + 1])));return(Mort)},Ensemble=Ensemble,JCUs=JCUs)
-
-	#MORTALITY BREEDING AGE (ADULTS)
-	MORTB <- apply(X=Ensemble,MARGIN=1,FUN=function(X,Ensemble,JCUs){Hunting <- JCUs[,"HunPress"];Mort <- ifelse(Hunting==1,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTB1_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTB1_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTB1_BEST",X["EXPERT"] + 1]),ifelse(Hunting==2,rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTB2_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTB2_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTB2_BEST",X["EXPERT"] + 1]),rtriangle(n=1,a=Elicitation[Elicitation[,"PARAM"]=="MORTB3_LOW",X["EXPERT"] + 1],b=Elicitation[Elicitation[,"PARAM"]=="MORTB3_HIGH",X["EXPERT"] + 1],c=Elicitation[Elicitation[,"PARAM"]=="MORTB3_BEST",X["EXPERT"] + 1])));return(Mort)},Ensemble=Ensemble,JCUs=JCUs)
-
-	#INITIAL ADULT POPULATION SIZE
-	START_POP <- JCUs[,"StartPop"]
-
-	Output <- list(Ensemble, JCUInd_Params, K, MORTY, MORTA, MORTB, START_POP)
-
-	names(Output) <- c("ENSEMBLE.LIST","FIXED.PARAMS","K","MORT.STAGE1","MORT.STAGE2","MORT.STAGE3","INITIAL.POP.STAGE3")
-
-	return(Output)
-
-}
-
-#---------------------------------------------------------------
-
 #function to generate the parameter realisations from the elicited data
-#at the moment this usues a triangle distribution between the min and max
+#at the moment this uses a triangle distribution between the min and max
 #with the best guess as the peak
 
 get.parameters <- function(Elicitation,JCUs,Distances,Reps) {
@@ -402,8 +324,8 @@ get.parameters <- function(Elicitation,JCUs,Distances,Reps) {
 	#INITIAL ADULT POPULATION SIZE
 	START_POP <- JCUs[,"StartPop"]
 
-	Output <- list(Ensemble,JCUInd_Params,t(K),t(MORTY),t(MORTA),t(MORTB),START_POP,Distances)
-	names(Output) <- c("ENSEMBLE.LIST","FIXED.PARAMS","K","MORT.STAGE1","MORT.STAGE2","MORT.STAGE3","INITIAL.POP.STAGE3","DISTANCES")
+	Output <- list(Ensemble, JCUInd_Params, t(K), t(MORTY), t(MORTA), t(MORTB), START_POP,Distances)
+	names(Output) <- c("ENSEMBLE.LIST", "FIXED.PARAMS","K", "MORT.STAGE1", "MORT.STAGE2", "MORT.STAGE3", "INITIAL.POP.STAGE3","DISTANCES")
 
 	return(Output)
 }
@@ -432,9 +354,9 @@ run.pop.model.apply <- function(Ensemble, Params.List, Years, Reps) {
 	#note that for now we assume that these are all adults
 	initial.population[3,] <- Params.List$INITIAL.POP.STAGE3
 
-	#create other carrying capacity, mortality, and birth rate parameters
-	jcu.attributes <- matrix(0, ncol = 6, nrow = ncol(Params.List$K))
-	colnames(jcu.attributes) <- c("K", "mortality.stage1", "mortality.stage2", "mortality.stage3", "mortality.floaters", "birth.rate.mean") # set column names
+	#create carrying capacity, mortality, and birth rate parameters
+	jcu.attributes <- matrix(0, ncol = 7, nrow = ncol(Params.List$K))
+	colnames(jcu.attributes) <- c("K", "mortality.stage1", "mortality.stage2", "mortality.stage3", "mortality.floaters", "birth.rate","litter.size") # set column names
 
 	#populate matrix
 	#get K
@@ -450,7 +372,10 @@ run.pop.model.apply <- function(Ensemble, Params.List, Years, Reps) {
 	jcu.attributes[,"mortality.stage3"] <- Params.List$MORT.STAGE3[Ensemble[1],]
 	jcu.attributes[,"mortality.floaters"] <- Params.List$MORT.STAGE3[Ensemble[1],]
 	#birth rate
-	jcu.attributes[,"birth.rate.mean"] <- Params.List$FIXED.PARAMS[Ensemble[1],"BirthR"]
+	jcu.attributes[,"birth.rate"] <- Params.List$FIXED.PARAMS[Ensemble[1],"BirthR"]
+	#litter size
+	jcu.attributes[,"litter.size"] <- Params.List$FIXED.PARAMS[Ensemble[1],"LitS"]
+
 	#create data frame
 	jcu.attributes <- as.data.frame(jcu.attributes)
 
@@ -461,9 +386,6 @@ run.pop.model.apply <- function(Ensemble, Params.List, Years, Reps) {
 	#we assume that if the distance between JCUs is > the maximum dispersal distance
 	#then dispersal mortality = 1, otherwise we assume that dispersal mortality is
 	#= elicited dispersal mortality probability per 10 km ^ (distance_km / 10).
-
-	#NEED TO CHECK WE ARE USING THE RIGHT DISPERSAL PARAMETERS - CURRENTLY USING ADULT PARAMETERS (JR 20/5/18)
-	#NEED TO DISCUSS ASSUMPTIONS MADE HERE ABOUT DISPERSAL - ARE WE HAPPY WITH THIS? (JR 20/5/18)
 
 	#calculate dispersal mortality
 	disp.mort.matrix <- Params.List$FIXED.PARAMS[Ensemble[1],"DispM"] ^ (Params.List$DISTANCES / 10)
