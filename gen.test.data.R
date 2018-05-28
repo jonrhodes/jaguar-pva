@@ -14,7 +14,8 @@ jcu.attributes <- data.frame( K=c(20,20,20), #15),
                       mortality.floaters=c(0.14, 0.27, 0.51), # assume floaters the same as stage 3 for now.
 
 
-                      birth.rate.mean=rep(0.45, sim.num.JCUs)
+                      birth.rate=rep(0.45, sim.num.JCUs),
+                      litter.size=rep(2, sim.num.JCUs)
                       )
 
 

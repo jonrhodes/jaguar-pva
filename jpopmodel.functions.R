@@ -271,10 +271,9 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
     if(DEBUG.LEVEL>0) cat(' (Num disp:', dispersal.ctr, 'mort in disp:', dispersal.mort.ctr, ')')
     if(DEBUG.LEVEL>0 & (dispersal.ctr > dispersal.mort.ctr) ) cat('**********')
 
-    if(dispersal.ctr > dispersal.mort.ctr ) {
+    if(DEBUG.LEVEL>0) {
         cat('\n(Num disp:', dispersal.ctr, 'mort in disp:', dispersal.mort.ctr, ')')
-        cat('**********')
-
+        if(dispersal.ctr > dispersal.mort.ctr ) cat('**********')
     }
 
 	return (pop)

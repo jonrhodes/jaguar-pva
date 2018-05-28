@@ -67,7 +67,6 @@ run.jpop.model <-function(expert.ID, expert.realization, num.stoch.realizatons, 
             current.pop <- age.population(current.pop, OPT.NUMBER.OF.LIFE.STAGES)
 
             # do reproduction (assumes for now only last stage reproduces)
-
             current.pop <- reproduce(current.pop, jcu.att$birth.rate, jcu.att$litter.size)
 
             # loop through each JCU and apply the JCU specific mortality to each life stage
