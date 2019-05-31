@@ -1,5 +1,5 @@
 # jaguar-pva
-A PVA model for Barzillian Jaguar in the Atlantic forest region.
+A PVA model for Brazilian Jaguar in the Atlantic forest region.
 
 To run:
 
@@ -16,7 +16,7 @@ Current state of the code
 
 * There are 3 life stages and only the 3rd stage can reproduce or dispersal
 
-* There is no density dependence incoporated into the model yet. 
+* There is no density dependence incorporated into the model yet. 
 
   
 Assumptions of the model
