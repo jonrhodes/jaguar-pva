@@ -163,6 +163,7 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
 	dispersal.ctr <- 0
 	dispersal.mort.ctr <- 0
 
+
     # vector to hold the total number arriving at each patch after all
     # dispersal is done
     receive.cts <- rep(0, length(jcu.vec))
@@ -224,7 +225,12 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
 			dest.jcus <- sample(jcu.vec[-source.jcu], total.to.disperse, replace=TRUE )
 
 			# determine which ones survive the dispersal
-			survival.vec <- rbinom(n=total.to.disperse, size=1, prob=(1-disp.mort.mat[source.jcu, dest.jcus]) )
+
+            # Note: this line is needed to turn the subset of disp.mort.mat
+            # into a vector (it's a dataframe whene derived from the real data)
+            disp.probs <- as.numeric(1-disp.mort.mat[source.jcu, dest.jcus])
+
+			survival.vec <- rbinom(n=total.to.disperse, size=1, prob=disp.probs )
 			dest.jcus.surviving <- dest.jcus[which(survival.vec==1)]
 			num.die.dispersing <- length(which(survival.vec==0))
 
@@ -238,6 +244,7 @@ apply.dispersal <- function(pop, jcu.cc, disp.mort.mat) {
 		} else {
             num.die.dispersing <- 0
         }
+
 	}
 
         # -------------------------------------------------------------
@@ -394,10 +401,15 @@ run.pop.model.apply <- function(Ensemble, Params.List, Years, Reps) {
 
 	#calculate dispersal mortality
 	disp.mort.matrix <- Params.List$FIXED.PARAMS[Ensemble[1],"DispM"] ^ (Params.List$DISTANCES / 10)
+
 	#account for maximum dispersal distance - set mortality to 1 if greater than maximum dispersal
-	disp.mort.matrix <- ifelse(Params.List$DISTANCES > Params.List$FIXED.PARAMS[Ensemble[1],"MaxD"],1,disp.mort.matrix)
+	# disp.mort.matrix <- ifelse(Params.List$DISTANCES > Params.List$FIXED.PARAMS[Ensemble[1],"MaxD"],1,disp.mort.matrix)
+
+
+    disp.mort.matrix[Params.List$DISTANCES > Params.List$FIXED.PARAMS[Ensemble[1],"MaxD"]] <- 1
 
     cat( '\n Expert:', expert.ID, '\tExpert input realization:', expert.realization )
+
 
 	#run population model
 	run.jpop.model(expert.ID = expert.ID, expert.realization = expert.realization, num.stoch.realizatons = Reps, initial.pop = initial.population, jcu.att = jcu.attributes, disp.mort.mat = disp.mort.matrix, num.time.steps = Years)
