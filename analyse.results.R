@@ -8,8 +8,13 @@ rm(list=ls(all=TRUE))
 
 # read in the results to analyse 
 # results.file <- 'jpopmodel_data_disp.Rdata'
-results.file <- 'jpopmodel_data_disp_50-reps.Rdata'
+results.file <- 'jpopmodel_data_disp.Rdata'
 model.output.all.experts <- readRDS ( results.file )
+
+# jcus.to.plot <- jcu.vec
+jcus.to.plot <- 5:17
+jcus.to.plot <- c(1,5,9,13,14,15,16,17)
+jcus.to.plot <- 1:52
 
 
 # as have added data for running the model with multiple experts, just plot
@@ -112,9 +117,6 @@ for(current.expert in expert.vec) {
                 # ------------------------------------------------
 
 
-        # jcus.to.plot <- jcu.vec
-        jcus.to.plot <- 5:17
-        jcus.to.plot <- c(1,5,9,13,14,15,16,17)
 
         for(cur.jcu in jcus.to.plot ) {
 

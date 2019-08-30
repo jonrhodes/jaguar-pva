@@ -24,7 +24,7 @@ source('jpopmodel.main.R')
         # ------------------------------------------------
 
 time.steps <- 20
-stochastic.realizations <- 10
+stochastic.realizations <- 5
 expert.realizations <- 3
 
 use.fast.simulated.data <- FALSE  # if true use a small set of JCUs for fast testing
@@ -39,13 +39,19 @@ output.filename <- 'jpopmodel_data_disp.Rdata'
 par(mfrow=c(2,3))
 
 if(!use.fast.simulated.data) {
-  # elicited parameters
+
+  # in this case sampling from the elicited distributions
+
+  # read in the elicited parameters
   ParamElic <- read.csv('input_data/elicited_parameters.csv')
   Distances <- read.csv('input_data/distmatrix.csv',header=F)
-  JCUData <- read.csv('input_data/jcu_hunting_start_pop.csv')
+  JCUData <- read.csv('input_data/jcu_hunting_start_pop_unocc.csv')
+
+  # Note if use this file, only has 18 JCUs (no Unocc JCUs, so code runs much faster)
+  #JCUData <- read.csv('input_data/jcu_hunting_start_pop.csv')
 
   # sample parameter values based on elicited values
-  Params <- get.parameters(Elicitation = ParamElic,JCUs = JCUData,Distances = Distances,Reps = expert.realizations)
+  Params <- get.parameters(Elicitation = ParamElic, JCUs = JCUData, Distances = Distances, Reps = expert.realizations)
 
   # run population model
   model.output <- apply(X = Params$ENSEMBLE.LIST, MARGIN = 1, FUN = run.pop.model.apply, Params.List = Params, Years = time.steps, Reps = stochastic.realizations)
@@ -55,7 +61,8 @@ if(!use.fast.simulated.data) {
 
 } else {
 
-  # generate some data for doing fast tests
+  # generate some data for doing fast tests, 
+  # currently set to havge just 3 JCUs
   source('gen.test.data.R')
 
   # create initial output data for fist run. Assume just one realization per expert
